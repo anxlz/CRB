@@ -75,7 +75,7 @@ export class SetupChannelsCommand {
       },
     ];
 
-    if (channel.isTextBased()) {
+    if ('send' in channel && typeof channel.send === 'function') {
       await channel.send({
         embeds: [setupChannelEmbed],
         components,

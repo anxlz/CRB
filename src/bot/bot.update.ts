@@ -8,7 +8,7 @@ import { EMBED_COLOR } from '../constants/game-data';
 export class BotUpdate {
   constructor(private readonly botService: BotService) {}
 
-  @Once('ready')
+  @Once('clientReady')
   public async onReady(@Context() [client]: [Client]) {
     console.log(`Bot logged in as ${client.user?.tag}`);
     
