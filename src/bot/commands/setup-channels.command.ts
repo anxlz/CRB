@@ -62,7 +62,7 @@ export class SetupChannelsCommand {
     }
 
     const channels = [channel1, channel2, channel3, channel4, channel5].filter(
-      (ch): ch is Channel => ch !== undefined
+      (ch): ch is Channel => ch !== undefined && ch !== null
     );
 
     const addedChannels: string[] = [];
