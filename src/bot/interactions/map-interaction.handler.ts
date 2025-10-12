@@ -29,22 +29,22 @@ export class MapInteractionHandler {
       .map((p, index) => {
         const weapons = p.weapons ? p.weapons.join(', ') : 'None';
         return (
-          `**Player ${index + 1}: ${p.username}**\n` +
-          `├ Roles: ${ROLE_EMOJIS[p.role1!]} ${p.role1} / ${ROLE_EMOJIS[p.role2!]} ${p.role2}\n` +
-          `├ Weapons: ${weapons}\n` +
-          `├ Operator: ${OPERATOR_EMOJIS[p.operatorSkill!]} ${p.operatorSkill}\n` +
-          `└ Equipment: ${EQUIPMENT_EMOJIS[p.lethal!]} ${p.lethal} | ${EQUIPMENT_EMOJIS[p.tactical!]} ${p.tactical}`
+          `Player ${index + 1}: ${p.username}\n` +
+          `Roles: ${p.role1} / ${p.role2}\n` +
+          `Weapons: ${weapons}\n` +
+          `Operator: ${p.operatorSkill}\n` +
+          `Equipment: ${p.lethal} | ${p.tactical}`
         );
       })
       .join('\n\n');
 
     const embed = {
       color: EMBED_COLOR,
-      title: '📋 Final Roster Setup',
+      title: 'Final Roster Setup',
       description:
-        '**Your team configuration is complete!**\n\n' +
+        'Your team configuration is complete!\n\n' +
         playersList +
-        '\n\n✅ Setup Complete - Ready for Tournament!',
+        '\n\nSetup Complete - Ready for Tournament!',
       footer: { text: 'COD Mobile Esports' },
       timestamp: new Date().toISOString(),
     };
@@ -58,7 +58,6 @@ export class MapInteractionHandler {
             style: 2,
             label: 'Start New Setup',
             custom_id: 'new_setup',
-            emoji: { name: '🔄' },
           },
         ],
       },
@@ -84,18 +83,15 @@ export class MapInteractionHandler {
 
     const setupChannelEmbed = {
       color: EMBED_COLOR,
-      title: '🎮 COD Mobile Roster Setup',
+      title: 'Anxiety Rank 5 Queue',
       description:
-        'Click the **Join** button below to start setting up your team roster!\n\n' +
-        '**Setup Flow:**\n' +
-        '1️⃣ Select Weapon Class Roles (2 per player)\n' +
-        '2️⃣ Choose Weapons\n' +
-        '3️⃣ Pick Operator Skills\n' +
-        '4️⃣ Select Lethal & Tactical Equipment\n' +
-        '5️⃣ Vote on Maps\n' +
-        '6️⃣ Review Final Setup',
-      footer: { text: '5 Players Required' },
-      timestamp: new Date().toISOString(),
+        'This is the start of the Queue channel.\n\n' +
+        'War Machine/Gravity Spikes 0/2\n' +
+        'Equalizer/Purifier 0/2\n' +
+        'Death Machine/Gravity Vortex 0/2\n' +
+        'Sparrow/Claw 0/2\n' +
+        'Annihilator/Tempest 0/2',
+      footer: { text: '13/09/2025, 5:51PM' },
     };
 
     const components = [
@@ -104,10 +100,15 @@ export class MapInteractionHandler {
         components: [
           {
             type: 2,
-            style: 3,
-            label: 'Join',
+            style: 1,
+            label: 'Join Queue',
             custom_id: 'join_setup',
-            emoji: { name: '✅' },
+          },
+          {
+            type: 2,
+            style: 4,
+            label: 'Leave Queue',
+            custom_id: 'leave_setup',
           },
         ],
       },

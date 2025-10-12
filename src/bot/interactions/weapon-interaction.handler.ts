@@ -58,15 +58,15 @@ export class WeaponInteractionHandler {
   private async updateWeaponEmbed(interaction: any, setup: any) {
     const embed = {
       color: EMBED_COLOR,
-      title: '🔫 Weapon Selection',
+      title: 'Weapon Selection',
       description:
-        '**Select your weapons based on your assigned roles:**\n\n' +
+        'Select your weapons based on your assigned roles:\n\n' +
         setup.players
           .map((p) => {
             if (p.weapons && p.weapons.length > 0) {
-              return `✅ ${p.username}: ${p.weapons.join(', ')}`;
+              return `${p.username}: ${p.weapons.join(', ')}`;
             }
-            return `⏳ ${p.username} (${ROLE_EMOJIS[p.role1!]} ${p.role1} / ${ROLE_EMOJIS[p.role2!]} ${p.role2})`;
+            return `${p.username} (${p.role1} / ${p.role2})`;
           })
           .join('\n'),
       footer: { text: 'Select weapons from the dropdown below' },
@@ -100,14 +100,12 @@ export class WeaponInteractionHandler {
             style: 2,
             label: 'Edit',
             custom_id: 'edit_weapons',
-            emoji: { name: '✏️' },
           },
           {
             type: 2,
             style: 4,
             label: 'Leave',
             custom_id: 'leave_setup',
-            emoji: { name: '❌' },
           },
         ],
       },
@@ -121,23 +119,21 @@ export class WeaponInteractionHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: '⚡ Operator Skills Selection',
+      title: 'Operator Skills Selection',
       description:
-        '**Each player must select a unique operator skill:**\n\n' +
+        'Each player must select a unique operator skill:\n\n' +
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `✅ ${p.username}: ${OPERATOR_EMOJIS[p.operatorSkill]} ${p.operatorSkill}`;
+              return `${p.username}: ${p.operatorSkill}`;
             }
-            return `⏳ ${p.username} - Selecting...`;
+            return `${p.username} - Selecting...`;
           })
           .join('\n') +
-        '\n\n**Available Operators:**\n' +
+        '\n\nAvailable Operators:\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
-          return taken
-            ? `~~${OPERATOR_EMOJIS[op]} ${op}~~ (${taken.username})`
-            : `${OPERATOR_EMOJIS[op]} ${op}`;
+          return taken ? `${op} (${taken.username})` : op;
         }).join('\n'),
       footer: { text: 'Click an operator button below - Each must be unique!' },
     };
@@ -151,7 +147,6 @@ export class WeaponInteractionHandler {
       style: takenOperators.includes(op) ? 2 : 1,
       label: op,
       custom_id: `select_operator_${op.replace(/\s+/g, '_')}`,
-      emoji: { name: OPERATOR_EMOJIS[op] },
       disabled: takenOperators.includes(op),
     }));
 
@@ -172,14 +167,12 @@ export class WeaponInteractionHandler {
             style: 2,
             label: 'Edit',
             custom_id: 'edit_operators',
-            emoji: { name: '✏️' },
           },
           {
             type: 2,
             style: 4,
             label: 'Leave',
             custom_id: 'leave_setup',
-            emoji: { name: '❌' },
           },
         ],
       },

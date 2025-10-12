@@ -28,18 +28,15 @@ export class BotUpdate {
         if (channel && channel.isTextBased()) {
           const setupChannelEmbed = {
             color: EMBED_COLOR,
-            title: '🎮 COD Mobile Roster Setup',
+            title: 'Anxiety Rank 5 Queue',
             description:
-              'Click the **Join** button below to start setting up your team roster!\n\n' +
-              '**Setup Flow:**\n' +
-              '1️⃣ Select Weapon Class Roles (2 per player)\n' +
-              '2️⃣ Choose Weapons\n' +
-              '3️⃣ Pick Operator Skills\n' +
-              '4️⃣ Select Lethal & Tactical Equipment\n' +
-              '5️⃣ Vote on Maps\n' +
-              '6️⃣ Review Final Setup',
-            footer: { text: '5 Players Required' },
-            timestamp: new Date().toISOString(),
+              'This is the start of the Queue channel.\n\n' +
+              'War Machine/Gravity Spikes 0/2\n' +
+              'Equalizer/Purifier 0/2\n' +
+              'Death Machine/Gravity Vortex 0/2\n' +
+              'Sparrow/Claw 0/2\n' +
+              'Annihilator/Tempest 0/2',
+            footer: { text: '13/09/2025, 5:51PM' },
           };
 
           const components = [
@@ -48,10 +45,15 @@ export class BotUpdate {
               components: [
                 {
                   type: 2,
-                  style: 3,
-                  label: 'Join',
+                  style: 1,
+                  label: 'Join Queue',
                   custom_id: 'join_setup',
-                  emoji: { name: '✅' },
+                },
+                {
+                  type: 2,
+                  style: 4,
+                  label: 'Leave Queue',
+                  custom_id: 'leave_setup',
                 },
               ],
             },

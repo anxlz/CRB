@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Context, Button, ButtonContext } from 'necord';
 import { BotService } from '../bot.service';
-import { EMBED_COLOR, ROLE_EMOJIS, ROLE_DESCRIPTIONS, WeaponClassRole } from '../../constants/game-data';
+import { EMBED_COLOR, ROLE_COMBINATIONS } from '../../constants/game-data';
 
 @Injectable()
 export class ActionButtonHandler {
@@ -15,6 +15,7 @@ export class ActionButtonHandler {
     let setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
       setup = this.botService.createSetup(guildId, channelId);
+      setup.messageId = interaction.message.id;
     }
 
     const added = this.botService.addPlayer(
@@ -34,23 +35,20 @@ export class ActionButtonHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: `🎮 Weapon Class Role Selection (${setup.players.length}/5)`,
+      title: `Anxiety Rank 5 Queue`,
       description:
-        '**Select your 2 weapon class roles:**\n\n' +
-        `${ROLE_EMOJIS[WeaponClassRole.AR]} **${ROLE_DESCRIPTIONS[WeaponClassRole.AR]}** - ${setup.rolePool[WeaponClassRole.AR]}/3 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.SMG]} **${ROLE_DESCRIPTIONS[WeaponClassRole.SMG]}** - ${setup.rolePool[WeaponClassRole.SMG]}/3 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.HEAVY]} **${ROLE_DESCRIPTIONS[WeaponClassRole.HEAVY]}** - ${setup.rolePool[WeaponClassRole.HEAVY]}/2 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.MARKSMAN]} **${ROLE_DESCRIPTIONS[WeaponClassRole.MARKSMAN]}** - ${setup.rolePool[WeaponClassRole.MARKSMAN]}/2 available\n\n` +
-        '**Players:**\n' +
         setup.players
           .map((p) => {
-            if (p.role1 && p.role2) {
-              return `✅ ${p.username} - ${ROLE_EMOJIS[p.role1]} ${p.role1} / ${ROLE_EMOJIS[p.role2]} ${p.role2}`;
+            if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
+              return `${p.role1}/${p.role2} ${p.weapons[0]} 1/1`;
+            } else if (p.role1 && p.role2) {
+              return `${p.role1}/${p.role2} 0/1`;
             }
-            return `⏳ ${p.username} - Selecting...`;
+            return `Selecting... 0/1`;
           })
-          .join('\n'),
-      footer: { text: 'Select 2 different roles from the dropdowns below' },
+          .join('\n') + '\n\n' +
+        `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+      footer: { text: `15/09/2025, 5:51PM` },
     };
 
     const components = [
@@ -59,27 +57,11 @@ export class ActionButtonHandler {
         components: [
           {
             type: 3,
-            custom_id: 'select_role1',
-            placeholder: 'Select Primary Role',
-            options: Object.values(WeaponClassRole).map((role) => ({
-              label: ROLE_DESCRIPTIONS[role],
-              value: role,
-              emoji: { name: ROLE_EMOJIS[role] },
-            })),
-          },
-        ],
-      },
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_role2',
-            placeholder: 'Select Secondary Role',
-            options: Object.values(WeaponClassRole).map((role) => ({
-              label: ROLE_DESCRIPTIONS[role],
-              value: role,
-              emoji: { name: ROLE_EMOJIS[role] },
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
             })),
           },
         ],
@@ -92,14 +74,12 @@ export class ActionButtonHandler {
             style: 2,
             label: 'Edit',
             custom_id: 'edit_roles',
-            emoji: { name: '✏️' },
           },
           {
             type: 2,
             style: 4,
             label: 'Leave',
             custom_id: 'leave_setup',
-            emoji: { name: '❌' },
           },
         ],
       },
@@ -140,7 +120,7 @@ export class ActionButtonHandler {
   @Button('edit_roles')
   public async onEdit(@Context() [interaction]: ButtonContext) {
     return interaction.reply({
-      content: 'Select new roles from the dropdowns above to update your selection.',
+      content: 'Select a new role combination from the dropdown above to update your selection.',
       ephemeral: true,
     });
   }
