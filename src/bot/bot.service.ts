@@ -29,6 +29,7 @@ export class BotService {
   private setupChannels: Map<string, string[]> = new Map();
   private activeSetups: Map<string, TeamSetup> = new Map();
   private logChannels: Map<string, string> = new Map();
+  private managerRoles: Map<string, string> = new Map();
   private testMode: boolean = false;
   private client: Client | null = null;
 
@@ -230,6 +231,14 @@ export class BotService {
   
   getLogChannel(guildId: string): string | undefined {
     return this.logChannels.get(guildId);
+  }
+  
+  setManagerRole(guildId: string, roleId: string) {
+    this.managerRoles.set(guildId, roleId);
+  }
+  
+  getManagerRole(guildId: string): string | undefined {
+    return this.managerRoles.get(guildId);
   }
   
   setTestMode(enabled: boolean) {
