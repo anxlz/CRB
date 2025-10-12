@@ -144,11 +144,11 @@ export class RoleInteractionHandler {
         setup.players
           .map((p) => {
             if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
-              return `${p.role1}/${p.role2} ${p.weapons[0]} 1/1`;
+              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/1`;
             } else if (p.role1 && p.role2) {
-              return `${p.role1}/${p.role2} 0/1`;
+              return `${p.role1}/${p.role2}\n0/1`;
             }
-            return `Selecting... 0/1`;
+            return `Selecting...\n0/1`;
           })
           .join('\n') + '\n\n' +
         `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
@@ -214,11 +214,11 @@ export class RoleInteractionHandler {
           setup.players
             .map((p) => {
               if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
-                return `${p.role1}/${p.role2} ${p.weapons[0]} 1/1`;
+                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/1`;
               } else if (p.role1 && p.role2) {
-                return `${p.role1}/${p.role2} 0/1`;
+                return `${p.role1}/${p.role2}\n0/1`;
               }
-              return `Selecting... 0/1`;
+              return `Selecting...\n0/1`;
             })
             .join('\n') + '\n\n' +
           `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
