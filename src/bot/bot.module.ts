@@ -3,6 +3,7 @@ import { BotService } from './bot.service';
 import { SetupChannelsCommand } from './commands/setup-channels.command';
 import { ResetSetupCommand } from './commands/reset-setup.command';
 import { SetLogChannelCommand } from './commands/set-log-channel.command';
+import { SetManagerRoleCommand } from './commands/set-manager-role.command';
 import { TestModeCommand } from './commands/test-mode.command';
 import { PlayerProfileCommand } from './commands/player-profile.command';
 import { SendSetupCommand } from './commands/send-setup.command';
@@ -21,6 +22,7 @@ import { ActionButtonHandler } from './interactions/action-button.handler';
     SetupChannelsCommand,
     ResetSetupCommand,
     SetLogChannelCommand,
+    SetManagerRoleCommand,
     TestModeCommand,
     PlayerProfileCommand,
     SendSetupCommand,
