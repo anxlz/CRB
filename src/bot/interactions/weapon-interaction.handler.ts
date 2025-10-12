@@ -4,8 +4,6 @@ import { BotService } from '../bot.service';
 import {
   EMBED_COLOR,
   OPERATOR_SKILLS,
-  OPERATOR_EMOJIS,
-  ROLE_EMOJIS,
 } from '../../constants/game-data';
 
 @Injectable()
