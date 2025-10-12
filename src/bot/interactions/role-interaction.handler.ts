@@ -3,24 +3,23 @@ import { Context, StringSelect, StringSelectContext, SelectedStrings } from 'nec
 import { BotService } from '../bot.service';
 import {
   EMBED_COLOR,
-  ROLE_EMOJIS,
-  ROLE_DESCRIPTIONS,
-  WeaponClassRole,
-  WEAPONS,
+  ROLE_COMBINATIONS,
+  parseRoleCombination,
+  getRoleCombinationWeapons,
 } from '../../constants/game-data';
 
 @Injectable()
 export class RoleInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
-  @StringSelect('select_role1')
-  public async onSelectRole1(
+  @StringSelect('select_role_combination')
+  public async onSelectRoleCombination(
     @Context() [interaction]: StringSelectContext,
     @SelectedStrings() selected: string[],
   ) {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
-    const role1 = selected[0] as WeaponClassRole;
+    const combination = selected[0];
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
@@ -38,41 +37,64 @@ export class RoleInteractionHandler {
       });
     }
 
-    if (player.role2 === role1) {
+    const { role1, role2 } = parseRoleCombination(combination);
+
+    if (!this.botService.canSelectRole(setup, interaction.user.id, role1) ||
+        !this.botService.canSelectRole(setup, interaction.user.id, role2)) {
       return interaction.reply({
-        content: 'You cannot select the same role twice!',
+        content: `The role pool for this combination is full!`,
         ephemeral: true,
       });
     }
 
-    if (!this.botService.canSelectRole(setup, interaction.user.id, role1)) {
-      return interaction.reply({
-        content: `The ${ROLE_DESCRIPTIONS[role1]} role pool is full!`,
-        ephemeral: true,
-      });
-    }
+    const weapons = getRoleCombinationWeapons(combination);
+
+    const weaponOptions = weapons.map((weapon) => ({
+      label: weapon,
+      value: weapon,
+    }));
+
+    const components = [
+      {
+        type: 1,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_weapon_from_combination',
+            placeholder: 'Select Your Weapon',
+            options: weaponOptions,
+          },
+        ],
+      },
+    ];
+
+    await interaction.reply({
+      content: `You selected **${combination}**. Now choose your weapon:`,
+      components,
+      ephemeral: true,
+    });
 
     if (player.role1) setup.rolePool[player.role1]++;
+    if (player.role2) setup.rolePool[player.role2]++;
+    
     player.role1 = role1;
+    player.role2 = role2;
     setup.rolePool[role1]--;
-
-    if (player.role1 && player.role2) {
-      await this.checkAndMoveToWeapons(interaction, setup);
-    } else {
-      await this.updateRoleEmbed(interaction, setup);
-    }
+    setup.rolePool[role2]--;
 
     this.botService.updateSetup(guildId, channelId, setup);
+
+    await this.updateRoleEmbed(interaction, setup);
   }
 
-  @StringSelect('select_role2')
-  public async onSelectRole2(
+  @StringSelect('select_weapon_from_combination')
+  public async onSelectWeaponFromCombination(
     @Context() [interaction]: StringSelectContext,
     @SelectedStrings() selected: string[],
   ) {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
-    const role2 = selected[0] as WeaponClassRole;
+    const weapon = selected[0];
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
@@ -90,57 +112,41 @@ export class RoleInteractionHandler {
       });
     }
 
-    if (player.role1 === role2) {
-      return interaction.reply({
-        content: 'You cannot select the same role twice!',
-        ephemeral: true,
-      });
-    }
+    player.weapons = [weapon];
 
-    if (!this.botService.canSelectRole(setup, interaction.user.id, role2)) {
-      return interaction.reply({
-        content: `The ${ROLE_DESCRIPTIONS[role2]} role pool is full!`,
-        ephemeral: true,
-      });
-    }
-
-    if (player.role2) setup.rolePool[player.role2]++;
-    player.role2 = role2;
-    setup.rolePool[role2]--;
-
-    if (player.role1 && player.role2) {
-      await this.checkAndMoveToWeapons(interaction, setup);
-    } else {
-      await this.updateRoleEmbed(interaction, setup);
-    }
+    await interaction.update({
+      content: `Weapon selected: **${weapon}**`,
+      components: [],
+    });
 
     this.botService.updateSetup(guildId, channelId, setup);
+
+    const message = await interaction.channel?.messages.fetch(setup.messageId!);
+    if (message) {
+      await this.checkAndMoveToOperators(message, setup);
+    }
   }
 
   private async updateRoleEmbed(interaction: any, setup: any) {
+    const message = await interaction.channel?.messages.fetch(setup.messageId!);
+    if (!message) return;
+
     const embed = {
       color: EMBED_COLOR,
-      title: `🎮 Weapon Class Role Selection (${setup.players.length}/5)`,
+      title: `Anxiety Rank 5 Queue`,
       description:
-        '**Select your 2 weapon class roles:**\n\n' +
-        `${ROLE_EMOJIS[WeaponClassRole.AR]} **${ROLE_DESCRIPTIONS[WeaponClassRole.AR]}** - ${setup.rolePool[WeaponClassRole.AR]}/3 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.SMG]} **${ROLE_DESCRIPTIONS[WeaponClassRole.SMG]}** - ${setup.rolePool[WeaponClassRole.SMG]}/3 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.HEAVY]} **${ROLE_DESCRIPTIONS[WeaponClassRole.HEAVY]}** - ${setup.rolePool[WeaponClassRole.HEAVY]}/2 available\n` +
-        `${ROLE_EMOJIS[WeaponClassRole.MARKSMAN]} **${ROLE_DESCRIPTIONS[WeaponClassRole.MARKSMAN]}** - ${setup.rolePool[WeaponClassRole.MARKSMAN]}/2 available\n\n` +
-        '**Players:**\n' +
         setup.players
           .map((p) => {
-            if (p.role1 && p.role2) {
-              return `✅ ${p.username} - ${ROLE_EMOJIS[p.role1]} ${p.role1} / ${ROLE_EMOJIS[p.role2]} ${p.role2}`;
-            } else if (p.role1) {
-              return `⏳ ${p.username} - ${ROLE_EMOJIS[p.role1]} ${p.role1} / ?`;
-            } else if (p.role2) {
-              return `⏳ ${p.username} - ? / ${ROLE_EMOJIS[p.role2]} ${p.role2}`;
+            if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
+              return `${p.role1}/${p.role2} ${p.weapons[0]} 1/1`;
+            } else if (p.role1 && p.role2) {
+              return `${p.role1}/${p.role2} 0/1`;
             }
-            return `⏳ ${p.username} - Selecting...`;
+            return `Selecting... 0/1`;
           })
-          .join('\n'),
-      footer: { text: 'Select 2 different roles from the dropdowns below' },
+          .join('\n') + '\n\n' +
+        `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+      footer: { text: `15/09/2025, 5:51PM` },
     };
 
     const components = [
@@ -149,27 +155,11 @@ export class RoleInteractionHandler {
         components: [
           {
             type: 3,
-            custom_id: 'select_role1',
-            placeholder: 'Select Primary Role',
-            options: Object.values(WeaponClassRole).map((role) => ({
-              label: ROLE_DESCRIPTIONS[role],
-              value: role,
-              emoji: { name: ROLE_EMOJIS[role] },
-            })),
-          },
-        ],
-      },
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_role2',
-            placeholder: 'Select Secondary Role',
-            options: Object.values(WeaponClassRole).map((role) => ({
-              label: ROLE_DESCRIPTIONS[role],
-              value: role,
-              emoji: { name: ROLE_EMOJIS[role] },
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
             })),
           },
         ],
@@ -182,66 +172,123 @@ export class RoleInteractionHandler {
             style: 2,
             label: 'Edit',
             custom_id: 'edit_roles',
-            emoji: { name: '✏️' },
           },
           {
             type: 2,
             style: 4,
             label: 'Leave',
             custom_id: 'leave_setup',
-            emoji: { name: '❌' },
           },
         ],
       },
     ];
 
-    await interaction.update({ embeds: [embed], components });
+    await message.edit({ embeds: [embed], components });
   }
 
-  private async checkAndMoveToWeapons(interaction: any, setup: any) {
-    if (!this.botService.allPlayersReady(setup, 'roles')) {
-      await this.updateRoleEmbed(interaction, setup);
+  private async checkAndMoveToOperators(message: any, setup: any) {
+    if (!this.botService.allPlayersReady(setup, 'weapons')) {
+      const embed = {
+        color: EMBED_COLOR,
+        title: `Anxiety Rank 5 Queue`,
+        description:
+          setup.players
+            .map((p) => {
+              if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
+                return `${p.role1}/${p.role2} ${p.weapons[0]} 1/1`;
+              } else if (p.role1 && p.role2) {
+                return `${p.role1}/${p.role2} 0/1`;
+              }
+              return `Selecting... 0/1`;
+            })
+            .join('\n') + '\n\n' +
+          `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+        footer: { text: `15/09/2025, 5:51PM` },
+      };
+
+      const components = [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_role_combination',
+              placeholder: 'Select Role Combination',
+              options: ROLE_COMBINATIONS.map((combo) => ({
+                label: combo,
+                value: combo,
+              })),
+            },
+          ],
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 2,
+              label: 'Edit',
+              custom_id: 'edit_roles',
+            },
+            {
+              type: 2,
+              style: 4,
+              label: 'Leave',
+              custom_id: 'leave_setup',
+            },
+          ],
+        },
+      ];
+
+      await message.edit({ embeds: [embed], components });
       return;
     }
 
-    setup.currentPage = 'weapons';
+    setup.currentPage = 'operators';
+
+    const { OPERATOR_SKILLS } = require('../../constants/game-data');
 
     const embed = {
       color: EMBED_COLOR,
-      title: '🔫 Weapon Selection',
+      title: 'Operator Skills Selection',
       description:
-        '**Select your weapons based on your assigned roles:**\n\n' +
+        'Each player must select a unique operator skill:\n\n' +
         setup.players
           .map((p) => {
-            const availableWeapons = this.botService.getAvailableWeapons(p);
-            if (p.weapons && p.weapons.length > 0) {
-              return `✅ ${p.username}: ${p.weapons.join(', ')}`;
+            if (p.operatorSkill) {
+              return `${p.username}: ${p.operatorSkill}`;
             }
-            return `⏳ ${p.username} (${ROLE_EMOJIS[p.role1!]} ${p.role1} / ${ROLE_EMOJIS[p.role2!]} ${p.role2})`;
+            return `${p.username} - Selecting...`;
           })
-          .join('\n'),
-      footer: { text: 'Select weapons from the dropdown below' },
+          .join('\n') +
+        '\n\nAvailable Operators:\n' +
+        OPERATOR_SKILLS.map((op) => {
+          const taken = setup.players.find((p) => p.operatorSkill === op);
+          return taken ? `${op} (${taken.username})` : op;
+        }).join('\n'),
+      footer: { text: 'Click an operator button below - Each must be unique!' },
     };
 
-    const player = setup.players.find((p) => p.userId === interaction.user.id);
-    const availableWeapons = this.botService.getAvailableWeapons(player);
+    const takenOperators = setup.players
+      .filter((p) => p.operatorSkill)
+      .map((p) => p.operatorSkill);
+
+    const operatorButtons = OPERATOR_SKILLS.map((op) => ({
+      type: 2,
+      style: takenOperators.includes(op) ? 2 : 1,
+      label: op,
+      custom_id: `select_operator_${op.replace(/\s+/g, '_')}`,
+      disabled: takenOperators.includes(op),
+    }));
 
     const components = [
       {
         type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_weapons',
-            placeholder: 'Select Your Weapons',
-            min_values: 1,
-            max_values: Math.min(availableWeapons.length, 25),
-            options: availableWeapons.map((weapon) => ({
-              label: weapon,
-              value: weapon,
-            })),
-          },
-        ],
+        components: operatorButtons.slice(0, 5),
+      },
+      {
+        type: 1,
+        components: operatorButtons.slice(5, 9),
       },
       {
         type: 1,
@@ -250,20 +297,18 @@ export class RoleInteractionHandler {
             type: 2,
             style: 2,
             label: 'Edit',
-            custom_id: 'edit_weapons',
-            emoji: { name: '✏️' },
+            custom_id: 'edit_operators',
           },
           {
             type: 2,
             style: 4,
             label: 'Leave',
             custom_id: 'leave_setup',
-            emoji: { name: '❌' },
           },
         ],
       },
     ];
 
-    await interaction.update({ embeds: [embed], components });
+    await message.edit({ embeds: [embed], components });
   }
 }
