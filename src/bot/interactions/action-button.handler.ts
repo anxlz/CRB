@@ -37,7 +37,7 @@ export class ActionButtonHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: `Anxiety Rank 5 Queue`,
+      title: `Roster Setup`,
       description:
         setup.players
           .map((p) => {
@@ -50,7 +50,7 @@ export class ActionButtonHandler {
           })
           .join('\n') + '\n\n' +
         `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
-      footer: { text: `15/09/2025, 5:51PM` },
+      footer: { text: 'COD Mobile Roster' },
     };
 
     const components = [
@@ -74,13 +74,13 @@ export class ActionButtonHandler {
           {
             type: 2,
             style: 1,
-            label: 'Join Queue',
+            label: 'Join',
             custom_id: 'join_setup',
           },
           {
             type: 2,
             style: 4,
-            label: 'Leave Queue',
+            label: 'Leave',
             custom_id: 'leave_setup',
           },
         ],

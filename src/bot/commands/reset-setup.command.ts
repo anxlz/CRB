@@ -34,27 +34,23 @@ export class ResetSetupCommand {
 
     const embed = {
       color: EMBED_COLOR,
-      title: '🔄 Setup Reset',
+      title: 'Setup Reset',
       description: 'The roster setup has been reset. You can start a new setup now.',
-      timestamp: new Date().toISOString(),
     };
 
     await interaction.reply({ embeds: [embed] });
 
     const setupChannelEmbed = {
       color: EMBED_COLOR,
-      title: '🎮 COD Mobile Roster Setup',
+      title: 'COD Mobile Roster Setup',
       description:
         'Click the **Join** button below to start setting up your team roster!\n\n' +
         '**Setup Flow:**\n' +
-        '1️⃣ Select Weapon Class Roles (2 per player)\n' +
-        '2️⃣ Choose Weapons\n' +
-        '3️⃣ Pick Operator Skills\n' +
-        '4️⃣ Select Lethal & Tactical Equipment\n' +
-        '5️⃣ Vote on Maps\n' +
-        '6️⃣ Review Final Setup',
+        '1. Select Weapon Class Roles (2 per player)\n' +
+        '2. Choose Weapons\n' +
+        '3. Pick Operator Skills\n' +
+        '4. Select Lethal & Tactical Equipment',
       footer: { text: '5 Players Required' },
-      timestamp: new Date().toISOString(),
     };
 
     const components = [
@@ -66,7 +62,6 @@ export class ResetSetupCommand {
             style: 3,
             label: 'Join',
             custom_id: 'join_setup',
-            emoji: { name: '✅' },
           },
         ],
       },

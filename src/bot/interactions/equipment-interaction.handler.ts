@@ -5,9 +5,6 @@ import {
   EMBED_COLOR,
   LETHAL_EQUIPMENT,
   TACTICAL_EQUIPMENT,
-  EQUIPMENT_EMOJIS,
-  MAPS,
-  MAP_EMOJIS,
 } from '../../constants/game-data';
 
 @Injectable()
@@ -37,6 +34,14 @@ export class EquipmentInteractionHandler {
     }
 
     player.lethal = lethalName;
+
+    this.botService.sendLog(guildId, '[LETHAL SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: player.username,
+      lethal: lethalName,
+      status: 'lethal_selected'
+    });
 
     if (this.botService.allPlayersReady(setup, 'equipment')) {
       await this.moveToMaps(interaction, setup);
@@ -78,6 +83,14 @@ export class EquipmentInteractionHandler {
     }
 
     player.tactical = tacticalName;
+
+    this.botService.sendLog(guildId, '[TACTICAL SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: player.username,
+      tactical: tacticalName,
+      status: 'tactical_selected'
+    });
 
     if (this.botService.allPlayersReady(setup, 'equipment')) {
       await this.moveToMaps(interaction, setup);
@@ -173,21 +186,30 @@ export class EquipmentInteractionHandler {
   }
 
   private async moveToMaps(interaction: any, setup: any) {
-    setup.currentPage = 'maps';
-
-    const modeDescriptions = Object.keys(MAPS)
-      .map((mode) => `${mode}:\n${MAPS[mode].join(', ')}`)
+    const guildId = setup.guildId;
+    const channelId = setup.channelId;
+    
+    const playersList = setup.players
+      .map((p, index) => {
+        const weapons = p.weapons ? p.weapons.join(', ') : 'None';
+        return (
+          `Player ${index + 1}: ${p.username}\n` +
+          `Roles: ${p.role1} / ${p.role2}\n` +
+          `Weapons: ${weapons}\n` +
+          `Operator: ${p.operatorSkill}\n` +
+          `Equipment: ${p.lethal} | ${p.tactical}`
+        );
+      })
       .join('\n\n');
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Map Voting',
+      title: 'Roster Setup Complete',
       description:
-        'Vote for your preferred maps:\n\n' +
-        modeDescriptions +
-        '\n\nMap voting feature coming soon!\n\n' +
-        'Click View Setup to see your final roster configuration.',
-      footer: { text: 'Click View Setup to review' },
+        'Your team configuration is complete!\n\n' +
+        playersList +
+        '\n\nSetup Complete - Ready for Tournament!',
+      footer: { text: 'COD Mobile Esports' },
     };
 
     const components = [
@@ -196,26 +218,29 @@ export class EquipmentInteractionHandler {
         components: [
           {
             type: 2,
-            style: 1,
-            label: 'View Setup',
-            custom_id: 'view_preview',
-          },
-          {
-            type: 2,
             style: 2,
-            label: 'Edit',
-            custom_id: 'edit_maps',
-          },
-          {
-            type: 2,
-            style: 4,
-            label: 'Leave',
-            custom_id: 'leave_setup',
+            label: 'Start New Setup',
+            custom_id: 'new_setup',
           },
         ],
       },
     ];
 
     await interaction.update({ embeds: [embed], components });
+    
+    this.botService.sendLog(guildId, '[ROSTER COMPLETE]', {
+      channelId,
+      players: setup.players.map(p => ({
+        userId: p.userId,
+        username: p.username,
+        role1: p.role1,
+        role2: p.role2,
+        weapons: p.weapons,
+        operatorSkill: p.operatorSkill,
+        lethal: p.lethal,
+        tactical: p.tactical,
+        status: 'completed'
+      }))
+    });
   }
 }

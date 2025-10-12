@@ -4,10 +4,8 @@ import { BotService } from '../bot.service';
 import {
   EMBED_COLOR,
   OPERATOR_SKILLS,
-  OPERATOR_EMOJIS,
   LETHAL_EQUIPMENT,
   TACTICAL_EQUIPMENT,
-  EQUIPMENT_EMOJIS,
 } from '../../constants/game-data';
 
 @Injectable()
@@ -44,6 +42,14 @@ export class OperatorInteractionHandler {
     }
 
     player.operatorSkill = operatorName;
+
+    this.botService.sendLog(guildId, '[OPERATOR SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: player.username,
+      operator: operatorName,
+      status: 'operator_selected'
+    });
 
     if (this.botService.allPlayersReady(setup, 'operators')) {
       await this.moveToEquipment(interaction, setup);

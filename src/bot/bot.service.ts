@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { WeaponClassRole } from '../constants/game-data';
+import { Client, TextChannel, EmbedBuilder } from 'discord.js';
 
 export interface PlayerSetup {
   userId: string;
@@ -25,6 +26,13 @@ export interface TeamSetup {
 export class BotService {
   private setupChannels: Map<string, string[]> = new Map();
   private activeSetups: Map<string, TeamSetup> = new Map();
+  private logChannels: Map<string, string> = new Map();
+  private testMode: boolean = false;
+  private client: Client | null = null;
+
+  setClient(client: Client) {
+    this.client = client;
+  }
 
   addSetupChannel(guildId: string, channelId: string) {
     const channels = this.setupChannels.get(guildId) || [];
@@ -77,9 +85,22 @@ export class BotService {
   }
 
   addPlayer(setup: TeamSetup, userId: string, username: string): boolean {
-    if (setup.players.length >= 5) return false;
+    const maxPlayers = this.testMode ? 1 : 5;
+    if (setup.players.length >= maxPlayers) return false;
     if (setup.players.some((p) => p.userId === userId)) return false;
     setup.players.push({ userId, username });
+    
+    const logData = {
+      guildId: setup.guildId,
+      channelId: setup.channelId,
+      userId,
+      username,
+      totalPlayers: setup.players.length,
+      status: 'joined'
+    };
+    
+    this.sendLog(setup.guildId, '[PLAYER JOINED]', logData);
+    
     return true;
   }
 
@@ -90,6 +111,17 @@ export class BotService {
     const player = setup.players[index];
     if (player.role1) setup.rolePool[player.role1]++;
     if (player.role2) setup.rolePool[player.role2]++;
+    
+    const logData = {
+      guildId: setup.guildId,
+      channelId: setup.channelId,
+      userId: player.userId,
+      username: player.username,
+      totalPlayers: setup.players.length - 1,
+      status: 'left'
+    };
+    
+    this.sendLog(setup.guildId, '[PLAYER LEFT]', logData);
     
     setup.players.splice(index, 1);
     return true;
@@ -145,7 +177,8 @@ export class BotService {
   }
 
   allPlayersReady(setup: TeamSetup, page: string): boolean {
-    if (setup.players.length !== 5) return false;
+    const requiredPlayers = this.testMode ? 1 : 5;
+    if (setup.players.length !== requiredPlayers) return false;
     
     switch (page) {
       case 'roles':
@@ -158,6 +191,49 @@ export class BotService {
         return setup.players.every((p) => p.lethal && p.tactical);
       default:
         return false;
+    }
+  }
+  
+  setLogChannel(guildId: string, channelId: string) {
+    this.logChannels.set(guildId, channelId);
+  }
+  
+  getLogChannel(guildId: string): string | undefined {
+    return this.logChannels.get(guildId);
+  }
+  
+  setTestMode(enabled: boolean) {
+    this.testMode = enabled;
+    console.log('[TEST MODE]', enabled ? 'ENABLED' : 'DISABLED');
+  }
+  
+  isTestMode(): boolean {
+    return this.testMode;
+  }
+
+  async sendLog(guildId: string, message: string, data?: any) {
+    console.log(message, data || '');
+    
+    const logChannelId = this.logChannels.get(guildId);
+    if (!logChannelId || !this.client) return;
+
+    try {
+      const channel = await this.client.channels.fetch(logChannelId);
+      if (channel && channel.isTextBased()) {
+        const textChannel = channel as TextChannel;
+        
+        const embed = {
+          color: 0x8943F9,
+          description: data 
+            ? `${message}\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``
+            : message,
+          timestamp: new Date().toISOString(),
+        };
+        
+        await textChannel.send({ embeds: [embed] });
+      }
+    } catch (error) {
+      console.error('Failed to send log to channel:', error);
     }
   }
 

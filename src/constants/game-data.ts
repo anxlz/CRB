@@ -21,12 +21,6 @@ export const ROLE_DESCRIPTIONS = {
   [WeaponClassRole.MARKSMAN]: 'Snipers & Marksman Rifles',
 };
 
-export const ROLE_EMOJIS = {
-  [WeaponClassRole.AR]: '🔫',
-  [WeaponClassRole.SMG]: '💨',
-  [WeaponClassRole.HEAVY]: '💪',
-  [WeaponClassRole.MARKSMAN]: '🎯',
-};
 
 export const ROLE_COMBINATIONS = [
   'AR/SMG',
@@ -76,29 +70,11 @@ export const OPERATOR_SKILLS = [
   'Tempest',
 ];
 
-export const OPERATOR_EMOJIS = {
-  'War Machine': '💣',
-  'Equalizer': '⚔️',
-  'Purifier': '🔥',
-  'Death Machine': '🔫',
-  'Gravity Vortex': '🌀',
-  'Sparrow': '🏹',
-  'Claw': '🦅',
-  'Annihilator': '💥',
-  'Tempest': '⚡',
-};
 
 export const LETHAL_EQUIPMENT = ['Frag Grenade', 'Sticky Grenade'];
 
 export const TACTICAL_EQUIPMENT = ['Trophy System', 'Flash Grenade', 'Smoke Grenade'];
 
-export const EQUIPMENT_EMOJIS = {
-  'Frag Grenade': '💣',
-  'Sticky Grenade': '🧲',
-  'Trophy System': '🛡️',
-  'Flash Grenade': '⚡',
-  'Smoke Grenade': '💨',
-};
 
 export const MAPS = {
   Hardpoint: ['Summit', 'Hacienda', 'Apocalypse', 'Arsenal', 'Slums'],
@@ -106,11 +82,6 @@ export const MAPS = {
   Control: ['Raid', 'Takeoff', 'Crossfire'],
 };
 
-export const MAP_EMOJIS = {
-  Hardpoint: '⚔️',
-  'Search & Destroy': '💣',
-  Control: '🎯',
-};
 
 export function getRoleCombinationWeapons(combination: string): string[] {
   const { role1, role2 } = parseRoleCombination(combination);

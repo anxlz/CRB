@@ -59,6 +59,15 @@ export class RoleInteractionHandler {
     setup.rolePool[role1]--;
     setup.rolePool[role2]--;
 
+    this.botService.sendLog(guildId, '[ROLE SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: interaction.user.username,
+      role1,
+      role2,
+      status: 'role_selected'
+    });
+
     const weapons = getRoleCombinationWeapons(combination);
 
     const weaponOptions = weapons.map((weapon) => ({
@@ -118,6 +127,14 @@ export class RoleInteractionHandler {
 
     player.weapons = [weapon];
 
+    this.botService.sendLog(guildId, '[WEAPON SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: player.username,
+      weapon,
+      status: 'weapon_selected'
+    });
+
     await interaction.update({
       content: `Weapon selected: **${weapon}**`,
       components: [],
@@ -139,7 +156,7 @@ export class RoleInteractionHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: `Anxiety Rank 5 Queue`,
+      title: `Roster Setup`,
       description:
         setup.players
           .map((p) => {
@@ -152,7 +169,7 @@ export class RoleInteractionHandler {
           })
           .join('\n') + '\n\n' +
         `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
-      footer: { text: `15/09/2025, 5:51PM` },
+      footer: { text: 'COD Mobile Roster' },
     };
 
     const components = [
@@ -176,13 +193,13 @@ export class RoleInteractionHandler {
           {
             type: 2,
             style: 1,
-            label: 'Join Queue',
+            label: 'Join',
             custom_id: 'join_setup',
           },
           {
             type: 2,
             style: 4,
-            label: 'Leave Queue',
+            label: 'Leave',
             custom_id: 'leave_setup',
           },
         ],
@@ -209,7 +226,7 @@ export class RoleInteractionHandler {
 
       const embed = {
         color: EMBED_COLOR,
-        title: `Anxiety Rank 5 Queue`,
+        title: `Roster Setup`,
         description:
           setup.players
             .map((p) => {
@@ -222,7 +239,7 @@ export class RoleInteractionHandler {
             })
             .join('\n') + '\n\n' +
           `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
-        footer: { text: `15/09/2025, 5:51PM` },
+        footer: { text: 'COD Mobile Roster' },
       };
 
       const components = [
@@ -246,13 +263,13 @@ export class RoleInteractionHandler {
             {
               type: 2,
               style: 1,
-              label: 'Join Queue',
+              label: 'Join',
               custom_id: 'join_setup',
             },
             {
               type: 2,
               style: 4,
-              label: 'Leave Queue',
+              label: 'Leave',
               custom_id: 'leave_setup',
             },
           ],

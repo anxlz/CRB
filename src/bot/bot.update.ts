@@ -12,6 +12,8 @@ export class BotUpdate {
   public async onReady(@Context() [client]: [Client]) {
     console.log(`Bot logged in as ${client.user?.tag}`);
     
+    this.botService.setClient(client);
+    
     const setupChannels = await this.sendSetupMessages(client);
     console.log(`Sent setup messages to ${setupChannels} channels`);
   }
@@ -28,7 +30,7 @@ export class BotUpdate {
         if (channel && channel.isTextBased()) {
           const setupChannelEmbed = {
             color: EMBED_COLOR,
-            title: 'Anxiety Rank 5 Queue',
+            title: 'Roster Setup',
             description:
               'This is the start of the Queue channel.\n\n' +
               'War Machine/Gravity Spikes 0/2\n' +
@@ -36,7 +38,7 @@ export class BotUpdate {
               'Death Machine/Gravity Vortex 0/2\n' +
               'Sparrow/Claw 0/2\n' +
               'Annihilator/Tempest 0/2',
-            footer: { text: '13/09/2025, 5:51PM' },
+            footer: { text: 'COD Mobile Roster' },
           };
 
           const components = [
@@ -46,13 +48,13 @@ export class BotUpdate {
                 {
                   type: 2,
                   style: 1,
-                  label: 'Join Queue',
+                  label: 'Join',
                   custom_id: 'join_setup',
                 },
                 {
                   type: 2,
                   style: 4,
-                  label: 'Leave Queue',
+                  label: 'Leave',
                   custom_id: 'leave_setup',
                 },
               ],
