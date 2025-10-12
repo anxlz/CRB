@@ -215,12 +215,8 @@ export class EquipmentInteractionHandler {
       footer: { text: 'COD Mobile Esports' },
     };
 
-    const managerRoleId = this.botService.getManagerRole(guildId);
-    const hasManagerRole = !managerRoleId || interaction.member?.roles?.cache?.has(managerRoleId);
-
-    const components = [];
-    if (hasManagerRole) {
-      components.push({
+    const components = [
+      {
         type: 1,
         components: [
           {
@@ -230,8 +226,8 @@ export class EquipmentInteractionHandler {
             custom_id: 'new_setup',
           },
         ],
-      });
-    }
+      },
+    ];
 
     await interaction.update({ embeds: [embed], components });
     

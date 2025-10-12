@@ -5,14 +5,19 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 
 ## Recent Changes (October 12, 2025)
 - Streamlined roster setup flow: Role selection is now the first and only page (removed preview page and map voting)
-- Added `/playerprofile` command: Show player stats with 4:1 custom image (avatar + selections)
+- Added dual weapon selection system: Players now select 2 weapons with cascading dropdowns
+- Added streaming status indicators: Shows queue lifecycle (⏳ Waiting → 🔄 In Progress → ✅ Active → ✔️ COMPLETED)
+- Added lastQueueTime tracking: Timestamp updates when new queue starts and displays consistently across all embeds
+- Added `/sendsetup` command: Manually broadcast setup messages to specified channels
+- Added `/setmanagerrole` command: Configure role required to start new setups (permissions system)
+- Modified `/playerprofile` command: User parameter now optional, defaults to command author
+- Modified `/setupchannels` command: Now accepts up to 5 channels simultaneously
 - Added `/setlogchannel` command: Configure Discord channel for roster event logging
 - Added `/testmode` command: Enable test mode where 1 player counts as 5 (for testing)
 - Implemented comprehensive logging system: All roster events (join/leave/selections) log to console and configured Discord channel
-- Removed all timestamps from embeds for cleaner UI
+- Implemented role-based permissions: "Start New Setup" button only visible to users with manager role
 - Changed "Anxiety Rank 5 Queue" to "Roster Setup" throughout
 - Simplified button labels: "Join Queue" → "Join", "Leave Queue" → "Leave"
-- Removed all emojis from the project (text-only UI)
 - Installed canvas library with system dependencies for image generation
 
 ## Project Architecture
@@ -27,18 +32,20 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 ### Key Components
 
 #### Commands
-- `/setupchannels` - Configure setup message channels
+- `/setupchannels` - Configure setup message channels (up to 5 at once)
 - `/resetsetup` - Reset current roster setup
 - `/setlogchannel` - Set channel for roster event logs
+- `/setmanagerrole` - Set role required to start new setups
+- `/sendsetup` - Manually send setup message to specified channel
 - `/testmode` - Toggle test mode (1 player = 5 players)
-- `/playerprofile` - Display player profile with stats image
+- `/playerprofile` - Display player profile with stats image (defaults to author)
 
 #### Interactive Flow
 1. **Role Selection**: Players choose 2 weapon class roles each (validated against pool limits)
-2. **Weapon Selection**: Dropdown filtered by assigned roles
+2. **Weapon Selection**: Cascading dropdowns for 2 weapons filtered by assigned roles
 3. **Operator Skills**: Buttons for unique operator selection
 4. **Equipment**: Lethal (unlimited) and Tactical (3 max per type)
-5. **Setup Complete**: Final roster display with "Start New Setup" button
+5. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
 
 #### Services
 - **BotService**: Core business logic for setup management, validation, state tracking, and Discord logging
@@ -46,10 +53,11 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **Interaction Handlers**: Separate handlers for roles, weapons, operators, equipment, and action buttons
 
 ### Data Structure
-- In-memory storage for active setups, log channels, and test mode state
-- Setup state includes: players, role pool, current page, selections
+- In-memory storage for active setups, log channels, manager roles, and test mode state
+- Setup state includes: players, role pool, current page, selections, lastQueueTime, status
 - Real-time validation for role availability and operator uniqueness
 - Logging system sends events to both console and configured Discord channel
+- Status tracking: waiting → in_progress → active → completed
 
 ### Competitive Rules Implementation
 - **Role Pool**: 3 ARs, 3 SMGs, 2 Heavy, 2 Marksman per team
@@ -72,9 +80,11 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **Output**: Console (backend bot)
 
 ## Important Notes
-- **In-Memory State**: Log channel and test mode settings are stored in memory and reset on bot restart
+- **In-Memory State**: Log channel, manager role, and test mode settings are stored in memory and reset on bot restart
 - **Test Mode**: Useful for development - allows 1 player to fill all 5 slots
-- **No Emojis**: All UI is text-only for consistency
+- **Manager Role Permissions**: Only users with configured manager role can start new setups (if no role set, all users can)
+- **Timestamp Tracking**: lastQueueTime updates when first player joins empty setup or after completion
+- **Status Indicators**: Visual queue lifecycle tracking with emoji indicators
 
 ## Future Enhancements
 - Persistent storage with database for settings

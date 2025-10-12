@@ -13,6 +13,21 @@ export class MapInteractionHandler {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
 
+    const managerRoleId = this.botService.getManagerRole(guildId);
+    if (managerRoleId) {
+      const memberRoles = interaction.member?.roles;
+      const hasRole = Array.isArray(memberRoles) 
+        ? memberRoles.includes(managerRoleId)
+        : memberRoles?.cache?.has(managerRoleId);
+      
+      if (!hasRole) {
+        return interaction.reply({
+          content: 'You do not have permission to start a new setup. Only users with the manager role can do this.',
+          ephemeral: true,
+        });
+      }
+    }
+
     this.botService.resetSetup(guildId, channelId);
 
     const setupChannelEmbed = {

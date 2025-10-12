@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext, Options, RoleOption } from 'necord';
-import { Role } from 'discord.js';
+import { Role, PermissionFlagsBits } from 'discord.js';
 import { BotService } from '../bot.service';
 import { EMBED_COLOR } from '../../constants/game-data';
 
@@ -20,6 +20,8 @@ export class SetManagerRoleCommand {
   @SlashCommand({
     name: 'setmanagerrole',
     description: 'Set the role that can start new roster setups',
+    dmPermission: false,
+    defaultMemberPermissions: [PermissionFlagsBits.ManageGuild],
   })
   async onSetManagerRole(
     @Context() [interaction]: SlashCommandContext,
