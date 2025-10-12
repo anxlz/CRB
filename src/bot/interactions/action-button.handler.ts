@@ -33,6 +33,8 @@ export class ActionButtonHandler {
 
     this.botService.updateSetup(guildId, channelId, setup);
 
+    const { WeaponClassRole } = require('../../constants/game-data');
+
     const embed = {
       color: EMBED_COLOR,
       title: `Anxiety Rank 5 Queue`,
@@ -47,7 +49,7 @@ export class ActionButtonHandler {
             return `Selecting... 0/1`;
           })
           .join('\n') + '\n\n' +
-        `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
       footer: { text: `15/09/2025, 5:51PM` },
     };
 
@@ -71,15 +73,26 @@ export class ActionButtonHandler {
         components: [
           {
             type: 2,
-            style: 2,
-            label: 'Edit',
-            custom_id: 'edit_roles',
+            style: 1,
+            label: 'Join Queue',
+            custom_id: 'join_setup',
           },
           {
             type: 2,
             style: 4,
-            label: 'Leave',
+            label: 'Leave Queue',
             custom_id: 'leave_setup',
+          },
+        ],
+      },
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 2,
+            label: 'Edit',
+            custom_id: 'edit_roles',
           },
         ],
       },

@@ -39,13 +39,25 @@ export class RoleInteractionHandler {
 
     const { role1, role2 } = parseRoleCombination(combination);
 
-    if (!this.botService.canSelectRole(setup, interaction.user.id, role1) ||
-        !this.botService.canSelectRole(setup, interaction.user.id, role2)) {
+    if (player.role1) setup.rolePool[player.role1]++;
+    if (player.role2) setup.rolePool[player.role2]++;
+
+    if (setup.rolePool[role1] <= 0 || setup.rolePool[role2] <= 0) {
+      if (player.role1) setup.rolePool[player.role1]--;
+      if (player.role2) setup.rolePool[player.role2]--;
+      
+      this.botService.updateSetup(guildId, channelId, setup);
+      
       return interaction.reply({
         content: `The role pool for this combination is full!`,
         ephemeral: true,
       });
     }
+    
+    player.role1 = role1;
+    player.role2 = role2;
+    setup.rolePool[role1]--;
+    setup.rolePool[role2]--;
 
     const weapons = getRoleCombinationWeapons(combination);
 
@@ -73,14 +85,6 @@ export class RoleInteractionHandler {
       components,
       ephemeral: true,
     });
-
-    if (player.role1) setup.rolePool[player.role1]++;
-    if (player.role2) setup.rolePool[player.role2]++;
-    
-    player.role1 = role1;
-    player.role2 = role2;
-    setup.rolePool[role1]--;
-    setup.rolePool[role2]--;
 
     this.botService.updateSetup(guildId, channelId, setup);
 
@@ -131,6 +135,8 @@ export class RoleInteractionHandler {
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
     if (!message) return;
 
+    const { WeaponClassRole } = require('../../constants/game-data');
+
     const embed = {
       color: EMBED_COLOR,
       title: `Anxiety Rank 5 Queue`,
@@ -145,7 +151,7 @@ export class RoleInteractionHandler {
             return `Selecting... 0/1`;
           })
           .join('\n') + '\n\n' +
-        `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
       footer: { text: `15/09/2025, 5:51PM` },
     };
 
@@ -169,15 +175,26 @@ export class RoleInteractionHandler {
         components: [
           {
             type: 2,
-            style: 2,
-            label: 'Edit',
-            custom_id: 'edit_roles',
+            style: 1,
+            label: 'Join Queue',
+            custom_id: 'join_setup',
           },
           {
             type: 2,
             style: 4,
-            label: 'Leave',
+            label: 'Leave Queue',
             custom_id: 'leave_setup',
+          },
+        ],
+      },
+      {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 2,
+            label: 'Edit',
+            custom_id: 'edit_roles',
           },
         ],
       },
@@ -188,6 +205,8 @@ export class RoleInteractionHandler {
 
   private async checkAndMoveToOperators(message: any, setup: any) {
     if (!this.botService.allPlayersReady(setup, 'weapons')) {
+      const { WeaponClassRole } = require('../../constants/game-data');
+
       const embed = {
         color: EMBED_COLOR,
         title: `Anxiety Rank 5 Queue`,
@@ -202,7 +221,7 @@ export class RoleInteractionHandler {
               return `Selecting... 0/1`;
             })
             .join('\n') + '\n\n' +
-          `AR 0/3\nSMG 0/3\nMarksman 0/2\nHeavy 0/2`,
+          `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
         footer: { text: `15/09/2025, 5:51PM` },
       };
 
@@ -226,15 +245,26 @@ export class RoleInteractionHandler {
           components: [
             {
               type: 2,
-              style: 2,
-              label: 'Edit',
-              custom_id: 'edit_roles',
+              style: 1,
+              label: 'Join Queue',
+              custom_id: 'join_setup',
             },
             {
               type: 2,
               style: 4,
-              label: 'Leave',
+              label: 'Leave Queue',
               custom_id: 'leave_setup',
+            },
+          ],
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 2,
+              label: 'Edit',
+              custom_id: 'edit_roles',
             },
           ],
         },
