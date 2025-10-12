@@ -20,6 +20,8 @@ export interface TeamSetup {
   currentPage: 'roles' | 'weapons' | 'operators' | 'equipment' | 'maps' | 'preview';
   players: PlayerSetup[];
   rolePool: Record<WeaponClassRole, number>;
+  lastQueueTime?: Date;
+  status?: 'waiting' | 'active' | 'in_progress' | 'completed';
 }
 
 @Injectable()
@@ -67,6 +69,8 @@ export class BotService {
         [WeaponClassRole.HEAVY]: 2,
         [WeaponClassRole.MARKSMAN]: 2,
       },
+      lastQueueTime: new Date(),
+      status: 'waiting',
     };
     this.activeSetups.set(setupId, setup);
     return setup;
@@ -81,14 +85,26 @@ export class BotService {
   }
 
   resetSetup(guildId: string, channelId: string) {
-    this.activeSetups.delete(`${guildId}-${channelId}`);
+    const setupId = `${guildId}-${channelId}`;
+    const setup = this.activeSetups.get(setupId);
+    if (setup) {
+      setup.lastQueueTime = new Date();
+    }
+    this.activeSetups.delete(setupId);
   }
 
   addPlayer(setup: TeamSetup, userId: string, username: string): boolean {
     const maxPlayers = this.testMode ? 1 : 5;
     if (setup.players.length >= maxPlayers) return false;
     if (setup.players.some((p) => p.userId === userId)) return false;
+    
+    if (setup.players.length === 0 || setup.status === 'completed') {
+      setup.lastQueueTime = new Date();
+    }
+    
     setup.players.push({ userId, username });
+    
+    setup.status = setup.players.length === maxPlayers ? 'active' : 'in_progress';
     
     const logData = {
       guildId: setup.guildId,
@@ -124,6 +140,11 @@ export class BotService {
     this.sendLog(setup.guildId, '[PLAYER LEFT]', logData);
     
     setup.players.splice(index, 1);
+    
+    const maxPlayers = this.testMode ? 1 : 5;
+    setup.status = setup.players.length === 0 ? 'waiting' : 
+                   setup.players.length === maxPlayers ? 'active' : 'in_progress';
+    
     return true;
   }
 
@@ -180,18 +201,27 @@ export class BotService {
     const requiredPlayers = this.testMode ? 1 : 5;
     if (setup.players.length !== requiredPlayers) return false;
     
+    let isReady = false;
     switch (page) {
       case 'roles':
-        return setup.players.every((p) => p.role1 && p.role2);
+        isReady = setup.players.every((p) => p.role1 && p.role2);
+        break;
       case 'weapons':
-        return setup.players.every((p) => p.weapons && p.weapons.length > 0);
+        isReady = setup.players.every((p) => p.weapons && p.weapons.length >= 2);
+        break;
       case 'operators':
-        return setup.players.every((p) => p.operatorSkill);
+        isReady = setup.players.every((p) => p.operatorSkill);
+        break;
       case 'equipment':
-        return setup.players.every((p) => p.lethal && p.tactical);
+        isReady = setup.players.every((p) => p.lethal && p.tactical);
+        if (isReady) {
+          setup.status = 'completed';
+        }
+        break;
       default:
         return false;
     }
+    return isReady;
   }
   
   setLogChannel(guildId: string, channelId: string) {

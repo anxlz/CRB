@@ -8,10 +8,10 @@ import { createCanvas, loadImage } from 'canvas';
 class PlayerProfileDto {
   @UserOption({
     name: 'user',
-    description: 'The user to show profile for',
-    required: true,
+    description: 'The user to show profile for (defaults to you)',
+    required: false,
   })
-  user: User;
+  user?: User;
 }
 
 @Injectable()
@@ -36,6 +36,8 @@ export class PlayerProfileCommand {
       });
     }
 
+    const targetUser = user || interaction.user;
+
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
       return interaction.reply({
@@ -44,7 +46,7 @@ export class PlayerProfileCommand {
       });
     }
 
-    const player = setup.players.find((p) => p.userId === user.id);
+    const player = setup.players.find((p) => p.userId === targetUser.id);
     if (!player) {
       return interaction.reply({
         content: 'This player is not in the current setup.',
@@ -60,7 +62,7 @@ export class PlayerProfileCommand {
       ctx.fillRect(0, 0, 800, 200);
 
       try {
-        const avatarURL = user.displayAvatarURL({ extension: 'png', size: 128 });
+        const avatarURL = targetUser.displayAvatarURL({ extension: 'png', size: 128 });
         const avatar = await loadImage(avatarURL);
         ctx.drawImage(avatar, 20, 36, 128, 128);
       } catch (error) {
@@ -69,7 +71,7 @@ export class PlayerProfileCommand {
 
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 24px Arial';
-      ctx.fillText(user.username, 170, 50);
+      ctx.fillText(targetUser.username, 170, 50);
 
       ctx.font = '18px Arial';
       const stats = [
@@ -88,7 +90,7 @@ export class PlayerProfileCommand {
       });
 
       await interaction.reply({
-        content: `Player Profile: ${user.username}`,
+        content: `Player Profile: ${targetUser.username}`,
         files: [attachment],
       });
     } catch (error) {

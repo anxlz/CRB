@@ -35,21 +35,33 @@ export class ActionButtonHandler {
 
     const { WeaponClassRole } = require('../../constants/game-data');
 
+    const statusEmoji = {
+      waiting: '⏳',
+      in_progress: '🔄',
+      active: '✅',
+      completed: '✔️'
+    };
+
+    const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+
     const embed = {
       color: EMBED_COLOR,
-      title: `Roster Setup`,
+      title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
       description:
         setup.players
           .map((p) => {
-            if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
-              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/1`;
+            if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
+              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2`;
+            } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
+              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/2`;
             } else if (p.role1 && p.role2) {
-              return `${p.role1}/${p.role2}\n0/1`;
+              return `${p.role1}/${p.role2}\n0/2`;
             }
-            return `Selecting...\n0/1`;
+            return `Selecting...\n0/2`;
           })
           .join('\n') + '\n\n' +
-        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
+        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
+        `Last Queue: ${queueTime}`,
       footer: { text: 'COD Mobile Roster' },
     };
 
@@ -128,6 +140,88 @@ export class ActionButtonHandler {
       content: 'You have left the setup.',
       ephemeral: true,
     });
+
+    const message = await interaction.channel?.messages.fetch(setup.messageId!);
+    if (message) {
+      const { WeaponClassRole } = require('../../constants/game-data');
+
+      const statusEmoji = {
+        waiting: '⏳',
+        in_progress: '🔄',
+        active: '✅',
+        completed: '✔️'
+      };
+
+      const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+
+      const embed = {
+        color: EMBED_COLOR,
+        title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
+        description:
+          setup.players
+            .map((p) => {
+              if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
+                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2`;
+              } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
+                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/2`;
+              } else if (p.role1 && p.role2) {
+                return `${p.role1}/${p.role2}\n0/2`;
+              }
+              return `Selecting...\n0/2`;
+            })
+            .join('\n') + '\n\n' +
+          `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
+          `Last Queue: ${queueTime}`,
+        footer: { text: 'COD Mobile Roster' },
+      };
+
+      const components = [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_role_combination',
+              placeholder: 'Select Role Combination',
+              options: ROLE_COMBINATIONS.map((combo) => ({
+                label: combo,
+                value: combo,
+              })),
+            },
+          ],
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 1,
+              label: 'Join',
+              custom_id: 'join_setup',
+            },
+            {
+              type: 2,
+              style: 4,
+              label: 'Leave',
+              custom_id: 'leave_setup',
+            },
+          ],
+        },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
+              style: 2,
+              label: 'Edit',
+              custom_id: 'edit_roles',
+            },
+          ],
+        },
+      ];
+
+      await message.edit({ embeds: [embed], components });
+    }
   }
 
   @Button('edit_roles')

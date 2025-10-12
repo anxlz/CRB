@@ -6,11 +6,39 @@ import { EMBED_COLOR } from '../../constants/game-data';
 
 class SetupChannelDto {
   @ChannelOption({
-    name: 'channel',
-    description: 'Channel to add for setup messages',
+    name: 'channel1',
+    description: 'First channel to add for setup messages',
     required: true,
   })
-  channel: Channel;
+  channel1: Channel;
+
+  @ChannelOption({
+    name: 'channel2',
+    description: 'Second channel (optional)',
+    required: false,
+  })
+  channel2?: Channel;
+
+  @ChannelOption({
+    name: 'channel3',
+    description: 'Third channel (optional)',
+    required: false,
+  })
+  channel3?: Channel;
+
+  @ChannelOption({
+    name: 'channel4',
+    description: 'Fourth channel (optional)',
+    required: false,
+  })
+  channel4?: Channel;
+
+  @ChannelOption({
+    name: 'channel5',
+    description: 'Fifth channel (optional)',
+    required: false,
+  })
+  channel5?: Channel;
 }
 
 @Injectable()
@@ -23,7 +51,7 @@ export class SetupChannelsCommand {
   })
   async onSetupChannels(
     @Context() [interaction]: SlashCommandContext,
-    @Options() { channel }: SetupChannelDto,
+    @Options() { channel1, channel2, channel3, channel4, channel5 }: SetupChannelDto,
   ) {
     const guildId = interaction.guildId;
     if (!guildId) {
@@ -33,27 +61,44 @@ export class SetupChannelsCommand {
       });
     }
 
-    this.botService.addSetupChannel(guildId, channel.id);
+    const channels = [channel1, channel2, channel3, channel4, channel5].filter(
+      (ch): ch is Channel => ch !== undefined
+    );
+
+    const addedChannels: string[] = [];
+
+    for (const channel of channels) {
+      this.botService.addSetupChannel(guildId, channel.id);
+      addedChannels.push(`${channel}`);
+    }
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Setup Channel Configured',
-      description: `${channel} has been added as a roster setup channel.`,
+      title: 'Setup Channels Configured',
+      description: `The following channels have been added as roster setup channels:\n${addedChannels.join('\n')}`,
     };
 
     await interaction.reply({ embeds: [embed], ephemeral: true });
 
-    const setupChannelEmbed = {
-      color: EMBED_COLOR,
-      title: 'COD Mobile Roster Setup',
-      description:
-        'Click the **Join** button below to start setting up your team roster!\n\n' +
-        '**Setup Flow:**\n' +
-        '1. Select Weapon Class Roles (2 per player)\n' +
-        '2. Choose Weapons\n' +
-        '3. Pick Operator Skills\n' +
-        '4. Select Lethal & Tactical Equipment',
-      footer: { text: '5 Players Required' },
+    const setupChannelEmbed = (channelId: string) => {
+      const existingSetup = this.botService.getSetup(guildId!, channelId);
+      const queueTime = existingSetup?.lastQueueTime 
+        ? existingSetup.lastQueueTime.toLocaleString() 
+        : new Date().toLocaleString();
+      
+      return {
+        color: EMBED_COLOR,
+        title: 'COD Mobile Roster Setup',
+        description:
+          'Click the **Join** button below to start setting up your team roster!\n\n' +
+          '**Setup Flow:**\n' +
+          '1. Select Weapon Class Roles (2 per player)\n' +
+          '2. Choose Weapons (2 per player)\n' +
+          '3. Pick Operator Skills\n' +
+          '4. Select Lethal & Tactical Equipment\n\n' +
+          `Last Queue: ${queueTime}`,
+        footer: { text: '5 Players Required' },
+      };
     };
 
     const components = [
@@ -70,11 +115,13 @@ export class SetupChannelsCommand {
       },
     ];
 
-    if ('send' in channel && typeof channel.send === 'function') {
-      await channel.send({
-        embeds: [setupChannelEmbed],
-        components,
-      });
+    for (const channel of channels) {
+      if ('send' in channel && typeof channel.send === 'function') {
+        await channel.send({
+          embeds: [setupChannelEmbed(channel.id)],
+          components,
+        });
+      }
     }
   }
 }

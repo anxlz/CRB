@@ -5,6 +5,7 @@ import { ResetSetupCommand } from './commands/reset-setup.command';
 import { SetLogChannelCommand } from './commands/set-log-channel.command';
 import { TestModeCommand } from './commands/test-mode.command';
 import { PlayerProfileCommand } from './commands/player-profile.command';
+import { SendSetupCommand } from './commands/send-setup.command';
 import { BotUpdate } from './bot.update';
 import { RoleInteractionHandler } from './interactions/role-interaction.handler';
 import { WeaponInteractionHandler } from './interactions/weapon-interaction.handler';
@@ -22,6 +23,7 @@ import { ActionButtonHandler } from './interactions/action-button.handler';
     SetLogChannelCommand,
     TestModeCommand,
     PlayerProfileCommand,
+    SendSetupCommand,
     RoleInteractionHandler,
     WeaponInteractionHandler,
     OperatorInteractionHandler,

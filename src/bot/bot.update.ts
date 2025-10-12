@@ -28,6 +28,11 @@ export class BotUpdate {
         const channel = await guild.channels.fetch(channelId).catch(() => null);
         
         if (channel && channel.isTextBased()) {
+          const existingSetup = this.botService.getSetup(guild.id, channelId);
+          const queueTime = existingSetup?.lastQueueTime 
+            ? existingSetup.lastQueueTime.toLocaleString() 
+            : new Date().toLocaleString();
+          
           const setupChannelEmbed = {
             color: EMBED_COLOR,
             title: 'Roster Setup',
@@ -37,7 +42,8 @@ export class BotUpdate {
               'Equalizer/Purifier 0/2\n' +
               'Death Machine/Gravity Vortex 0/2\n' +
               'Sparrow/Claw 0/2\n' +
-              'Annihilator/Tempest 0/2',
+              'Annihilator/Tempest 0/2\n\n' +
+              `Last Queue: ${queueTime}`,
             footer: { text: 'COD Mobile Roster' },
           };
 

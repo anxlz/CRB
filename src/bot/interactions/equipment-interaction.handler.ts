@@ -189,6 +189,8 @@ export class EquipmentInteractionHandler {
     const guildId = setup.guildId;
     const channelId = setup.channelId;
     
+    const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+    
     const playersList = setup.players
       .map((p, index) => {
         const weapons = p.weapons ? p.weapons.join(', ') : 'None';
@@ -204,11 +206,12 @@ export class EquipmentInteractionHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Roster Setup Complete',
+      title: '✔️ Roster Setup COMPLETED',
       description:
         'Your team configuration is complete!\n\n' +
         playersList +
-        '\n\nSetup Complete - Ready for Tournament!',
+        '\n\nSetup Complete - Ready for Tournament!' +
+        `\n\nLast Queue: ${queueTime}`,
       footer: { text: 'COD Mobile Esports' },
     };
 

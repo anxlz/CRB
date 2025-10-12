@@ -127,16 +127,83 @@ export class RoleInteractionHandler {
 
     player.weapons = [weapon];
 
-    this.botService.sendLog(guildId, '[WEAPON SELECTED]', {
+    this.botService.sendLog(guildId, '[WEAPON 1 SELECTED]', {
       channelId,
       userId: interaction.user.id,
       username: player.username,
       weapon,
-      status: 'weapon_selected'
+      status: 'weapon_1_selected'
+    });
+
+    const combination = `${player.role1}/${player.role2}`;
+    const weapons = getRoleCombinationWeapons(combination);
+    
+    const weaponOptions = weapons
+      .filter(w => w !== weapon)
+      .map((w) => ({
+        label: w,
+        value: w,
+      }));
+
+    const components = [
+      {
+        type: 1,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_second_weapon',
+            placeholder: 'Select Your Second Weapon',
+            options: weaponOptions,
+          },
+        ],
+      },
+    ];
+
+    await interaction.update({
+      content: `First weapon selected: **${weapon}**\nNow choose your second weapon:`,
+      components,
+    });
+
+    this.botService.updateSetup(guildId, channelId, setup);
+  }
+
+  @StringSelect('select_second_weapon')
+  public async onSelectSecondWeapon(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
+    const guildId = interaction.guildId!;
+    const channelId = interaction.channelId;
+    const weapon = selected[0];
+
+    const setup = this.botService.getSetup(guildId, channelId);
+    if (!setup) {
+      return interaction.reply({
+        content: 'No active setup found!',
+        ephemeral: true,
+      });
+    }
+
+    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    if (!player || !player.weapons) {
+      return interaction.reply({
+        content: 'You are not in this setup or have not selected your first weapon!',
+        ephemeral: true,
+      });
+    }
+
+    player.weapons.push(weapon);
+
+    this.botService.sendLog(guildId, '[WEAPON 2 SELECTED]', {
+      channelId,
+      userId: interaction.user.id,
+      username: player.username,
+      weapon,
+      status: 'weapon_2_selected'
     });
 
     await interaction.update({
-      content: `Weapon selected: **${weapon}**`,
+      content: `Weapons selected: **${player.weapons[0]}** and **${weapon}**`,
       components: [],
     });
 
@@ -154,21 +221,33 @@ export class RoleInteractionHandler {
 
     const { WeaponClassRole } = require('../../constants/game-data');
 
+    const statusEmoji = {
+      waiting: '⏳',
+      in_progress: '🔄',
+      active: '✅',
+      completed: '✔️'
+    };
+
+    const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+
     const embed = {
       color: EMBED_COLOR,
-      title: `Roster Setup`,
+      title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
       description:
         setup.players
           .map((p) => {
-            if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
-              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/1`;
+            if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
+              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2`;
+            } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
+              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/2`;
             } else if (p.role1 && p.role2) {
-              return `${p.role1}/${p.role2}\n0/1`;
+              return `${p.role1}/${p.role2}\n0/2`;
             }
-            return `Selecting...\n0/1`;
+            return `Selecting...\n0/2`;
           })
           .join('\n') + '\n\n' +
-        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
+        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
+        `Last Queue: ${queueTime}`,
       footer: { text: 'COD Mobile Roster' },
     };
 
@@ -224,21 +303,33 @@ export class RoleInteractionHandler {
     if (!this.botService.allPlayersReady(setup, 'weapons')) {
       const { WeaponClassRole } = require('../../constants/game-data');
 
+      const statusEmoji = {
+        waiting: '⏳',
+        in_progress: '🔄',
+        active: '✅',
+        completed: '✔️'
+      };
+
+      const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+
       const embed = {
         color: EMBED_COLOR,
-        title: `Roster Setup`,
+        title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
         description:
           setup.players
             .map((p) => {
-              if (p.role1 && p.role2 && p.weapons && p.weapons.length > 0) {
-                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/1`;
+              if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
+                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2`;
+              } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
+                return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/2`;
               } else if (p.role1 && p.role2) {
-                return `${p.role1}/${p.role2}\n0/1`;
+                return `${p.role1}/${p.role2}\n0/2`;
               }
-              return `Selecting...\n0/1`;
+              return `Selecting...\n0/2`;
             })
             .join('\n') + '\n\n' +
-          `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2`,
+          `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
+          `Last Queue: ${queueTime}`,
         footer: { text: 'COD Mobile Roster' },
       };
 
