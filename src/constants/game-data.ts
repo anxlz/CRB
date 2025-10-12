@@ -28,6 +28,35 @@ export const ROLE_EMOJIS = {
   [WeaponClassRole.MARKSMAN]: '🎯',
 };
 
+export const ROLE_COMBINATIONS = [
+  'AR/SMG',
+  'AR/Marksman',
+  'AR/Heavy',
+  'SMG/AR',
+  'SMG/Marksman',
+  'SMG/Heavy',
+  'Marksman/AR',
+  'Marksman/SMG',
+  'Marksman/Heavy',
+  'Heavy/SMG',
+  'Heavy/AR',
+  'Heavy/Marksman',
+];
+
+export function parseRoleCombination(combination: string): { role1: WeaponClassRole; role2: WeaponClassRole } {
+  const [first, second] = combination.split('/');
+  const roleMap: Record<string, WeaponClassRole> = {
+    'AR': WeaponClassRole.AR,
+    'SMG': WeaponClassRole.SMG,
+    'Heavy': WeaponClassRole.HEAVY,
+    'Marksman': WeaponClassRole.MARKSMAN,
+  };
+  return {
+    role1: roleMap[first],
+    role2: roleMap[second],
+  };
+}
+
 export const WEAPONS = {
   [WeaponClassRole.AR]: ['M13', 'DR-H', 'HVK-30', 'Vargo-S', 'BP50'],
   [WeaponClassRole.SMG]: ['USS9', 'Fennec', 'CX-9', 'QQ9'],
@@ -82,3 +111,8 @@ export const MAP_EMOJIS = {
   'Search & Destroy': '💣',
   Control: '🎯',
 };
+
+export function getRoleCombinationWeapons(combination: string): string[] {
+  const { role1, role2 } = parseRoleCombination(combination);
+  return [...WEAPONS[role1], ...WEAPONS[role2]];
+}
