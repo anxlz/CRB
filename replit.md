@@ -4,11 +4,16 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 13, 2025 - Latest)
+- **Updated `/setgunsmenu` Command**: Changed to accept multiple list parameters (list1-list24) with comma-separated guns instead of individual gun options
+  - Supports up to 24 lists + 1 category = 25 total options (Discord's limit)
+  - Creates **multi-select menu** allowing users to choose multiple guns at once
+  - Pre-configured gun lists available for all weapon categories (AR, SMG, SNIPER, LMG, SHOTGUN, MARKSMAN, PISTOL)
+  - See `GUN_LISTS_REFERENCE.md` for complete gun lists organized by category
+  - Automatically filters banned weapons: NA-45, SVD, XPR-50, XPR, Thumper, Shorty, SMRS, FHJ-18, Argus, D13 Sector
 - **Enhanced Weapon Selection UX**: Updated weapon selection to show "1st Weapon (role)" and "2nd Weapon (role)" format, clearly indicating which weapon position and role is being selected
 - **Redesigned Initial Setup Page**: First page now displays role selection dropdown with Join, Leave, and Edit buttons, removing the previous setup flow description
 - **Added 💡 Help Button**: Introduced a light bulb emoji button that shows setup steps when clicked (instead of displaying steps on initial page)
 - **Improved Role Display**: Role combinations now display in **bold** with user mentions underneath and separator lines (─────) for better visual organization
-- **Created `/setgunsmenu` Command**: New slash command to create custom gun menus with up to 25 weapons per category, automatically filtering out banned weapons (NA-45, SVD, XPR-50, Thumper, Shorty, SMRS, FHJ-18, Argus, D13 Sector)
 - **Consistent UI Components**: All setup embeds (setupchannels, sendsetup, resetsetup, bot startup, new setup) now consistently show role dropdown, Join/Leave/Edit buttons, and 💡 button
 
 ## Recent Changes (October 13, 2025)
@@ -60,7 +65,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/testmode` - Toggle test mode (1 player = 5 players)
 - `/playerprofile` - Display player profile with stats image (defaults to author)
 - `/setemoji` - Configure custom emojis for roles, weapons, operators, tactical, and lethal equipment
-- `/setgunsmenu` - Create custom gun menus with up to 25 weapons per category (filters banned weapons)
+- `/setgunsmenu` - Create custom gun menus with multiple comma-separated gun lists (multi-select enabled, up to 25 guns displayed)
 
 #### Interactive Flow
 1. **Initial Page**: Role selection dropdown with Join, Leave, Edit buttons and 💡 help button (shows setup steps when clicked)
