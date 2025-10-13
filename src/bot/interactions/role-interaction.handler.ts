@@ -70,10 +70,19 @@ export class RoleInteractionHandler {
 
     const weapons = getRoleCombinationWeapons(combination);
 
-    const weaponOptions = weapons.map((weapon) => ({
-      label: weapon,
-      value: weapon,
-    }));
+    if (!weapons || weapons.length === 0) {
+      return interaction.reply({
+        content: 'No weapons available for this role combination!',
+        ephemeral: true,
+      });
+    }
+
+    const weaponOptions = weapons
+      .slice(0, 25)
+      .map((weapon) => ({
+        label: this.botService.formatWithEmoji(guildId, 'weapon', weapon),
+        value: weapon,
+      }));
 
     const components = [
       {
@@ -140,8 +149,9 @@ export class RoleInteractionHandler {
     
     const weaponOptions = weapons
       .filter(w => w !== weapon)
+      .slice(0, 25)
       .map((w) => ({
-        label: w,
+        label: this.botService.formatWithEmoji(guildId, 'weapon', w),
         value: w,
       }));
 
@@ -159,8 +169,9 @@ export class RoleInteractionHandler {
       },
     ];
 
+    const weaponWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
     await interaction.update({
-      content: `First weapon selected: **${weapon}**\nNow choose your second weapon:`,
+      content: `First weapon selected: **${weaponWithEmoji}**\nNow choose your second weapon:`,
       components,
     });
 

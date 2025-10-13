@@ -13,6 +13,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - Implemented custom emoji display system: All select menus and embeds now show configured emojis alongside item names
 - Added validation guards: Prevents selection of placeholder 'none' values in operator and tactical dropdowns when options are exhausted
 - Emoji storage: Per-guild emoji configurations stored in memory (resets on bot restart)
+- Fixed Discord API error: Limited weapon selection dropdowns to maximum 25 options (Discord's select menu limit)
 
 ## Recent Changes (October 12, 2025)
 - Streamlined roster setup flow: Role selection is now the first and only page (removed preview page and map voting)
