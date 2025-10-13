@@ -91,7 +91,7 @@ export class RoleInteractionHandler {
           {
             type: 3,
             custom_id: 'select_weapon_from_combination',
-            placeholder: 'Select Your Weapon',
+            placeholder: `Select 1st Weapon (${player.role1})`,
             options: weaponOptions,
           },
         ],
@@ -99,7 +99,7 @@ export class RoleInteractionHandler {
     ];
 
     await interaction.reply({
-      content: `You selected **${combination}**. Now choose your weapon:`,
+      content: `You selected **${combination}**. Now choose your 1st weapon (${player.role1}):`,
       components,
       ephemeral: true,
     });
@@ -162,7 +162,7 @@ export class RoleInteractionHandler {
           {
             type: 3,
             custom_id: 'select_second_weapon',
-            placeholder: 'Select Your Second Weapon',
+            placeholder: `Select 2nd Weapon (${player.role2})`,
             options: weaponOptions,
           },
         ],
@@ -171,7 +171,7 @@ export class RoleInteractionHandler {
 
     const weaponWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
     await interaction.update({
-      content: `First weapon selected: **${weaponWithEmoji}**\nNow choose your second weapon:`,
+      content: `1st weapon selected: **${weaponWithEmoji}**\nNow choose your 2nd weapon (${player.role2}):`,
       components,
     });
 
@@ -248,16 +248,16 @@ export class RoleInteractionHandler {
         setup.players
           .map((p) => {
             if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
-              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2`;
+              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2\n─────────────`;
             } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
-              return `${p.role1}/${p.role2}\n<@${p.userId}> ${p.weapons[0]} 1/2`;
+              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]} 1/2\n─────────────`;
             } else if (p.role1 && p.role2) {
-              return `${p.role1}/${p.role2}\n0/2`;
+              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - 0/2\n─────────────`;
             }
-            return `Selecting...\n0/2`;
+            return `**Selecting...**\n0/2\n─────────────`;
           })
           .join('\n') + '\n\n' +
-        `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
+        `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
         `Last Queue: ${queueTime}`,
       footer: { text: 'COD Mobile Roster' },
     };
@@ -292,6 +292,12 @@ export class RoleInteractionHandler {
             label: 'Leave',
             custom_id: 'leave_setup',
           },
+          {
+            type: 2,
+            style: 2,
+            label: 'Edit',
+            custom_id: 'edit_roles',
+          },
         ],
       },
       {
@@ -299,9 +305,9 @@ export class RoleInteractionHandler {
         components: [
           {
             type: 2,
-            style: 2,
-            label: 'Edit',
-            custom_id: 'edit_roles',
+            style: 3,
+            label: '💡',
+            custom_id: 'show_setup_steps',
           },
         ],
       },
