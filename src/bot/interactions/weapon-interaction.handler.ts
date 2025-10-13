@@ -54,6 +54,8 @@ export class WeaponInteractionHandler {
   }
 
   private async updateWeaponEmbed(interaction: any, setup: any) {
+    const guildId = setup.guildId;
+    
     const embed = {
       color: EMBED_COLOR,
       title: 'Weapon Selection',
@@ -62,9 +64,12 @@ export class WeaponInteractionHandler {
         setup.players
           .map((p) => {
             if (p.weapons && p.weapons.length > 0) {
-              return `${p.username}: ${p.weapons.join(', ')}`;
+              const weaponsWithEmoji = p.weapons.map(w => this.botService.formatWithEmoji(guildId, 'weapon', w));
+              return `${p.username}: ${weaponsWithEmoji.join(', ')}`;
             }
-            return `${p.username} (${p.role1} / ${p.role2})`;
+            const role1Emoji = this.botService.formatWithEmoji(guildId, 'role', p.role1);
+            const role2Emoji = this.botService.formatWithEmoji(guildId, 'role', p.role2);
+            return `${p.username} (${role1Emoji} / ${role2Emoji})`;
           })
           .join('\n'),
       footer: { text: 'Select weapons from the dropdown below' },
@@ -84,7 +89,7 @@ export class WeaponInteractionHandler {
             min_values: 1,
             max_values: Math.min(availableWeapons.length, 25),
             options: availableWeapons.map((weapon) => ({
-              label: weapon,
+              label: this.botService.formatWithEmoji(guildId, 'weapon', weapon),
               value: weapon,
             })),
           },
@@ -114,6 +119,7 @@ export class WeaponInteractionHandler {
 
   private async moveToOperators(interaction: any, setup: any) {
     setup.currentPage = 'operators';
+    const guildId = setup.guildId;
 
     const embed = {
       color: EMBED_COLOR,
@@ -123,7 +129,7 @@ export class WeaponInteractionHandler {
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `${p.username}: ${p.operatorSkill}`;
+              return `${p.username}: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}`;
             }
             return `${p.username} - Selecting...`;
           })
@@ -131,31 +137,35 @@ export class WeaponInteractionHandler {
         '\n\nAvailable Operators:\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
-          return taken ? `${op} (${taken.username})` : op;
+          const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+          return taken ? `${opWithEmoji} (${taken.username})` : opWithEmoji;
         }).join('\n'),
-      footer: { text: 'Click an operator button below - Each must be unique!' },
+      footer: { text: 'Select from the dropdown below - Each must be unique!' },
     };
 
     const takenOperators = setup.players
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorButtons = OPERATOR_SKILLS.map((op) => ({
-      type: 2,
-      style: takenOperators.includes(op) ? 2 : 1,
-      label: op,
-      custom_id: `select_operator_${op.replace(/\s+/g, '_')}`,
-      disabled: takenOperators.includes(op),
-    }));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
+      label: this.botService.formatWithEmoji(guildId, 'operator', op),
+      value: op,
+      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
+    })).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {
         type: 1,
-        components: operatorButtons.slice(0, 5),
-      },
-      {
-        type: 1,
-        components: operatorButtons.slice(5, 9),
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_operator',
+            placeholder: 'Select Operator Skill',
+            min_values: 1,
+            max_values: 1,
+            options: operatorOptions.length > 0 ? operatorOptions : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
+          },
+        ],
       },
       {
         type: 1,

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Context, Button, ButtonContext } from 'necord';
+import { Context, Button, ButtonContext, StringSelect, StringSelectContext, SelectedStrings } from 'necord';
 import { BotService } from '../bot.service';
 import {
   EMBED_COLOR,
@@ -11,11 +11,14 @@ import {
 export class EquipmentInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
-  @Button('select_lethal_:lethalName')
-  public async onSelectLethal(@Context() [interaction]: ButtonContext) {
+  @StringSelect('select_lethal')
+  public async onSelectLethal(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
-    const lethalName = interaction.customId.replace('select_lethal_', '').replace(/_/g, ' ');
+    const lethalName = selected[0];
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
@@ -52,11 +55,21 @@ export class EquipmentInteractionHandler {
     this.botService.updateSetup(guildId, channelId, setup);
   }
 
-  @Button('select_tactical_:tacticalName')
-  public async onSelectTactical(@Context() [interaction]: ButtonContext) {
+  @StringSelect('select_tactical')
+  public async onSelectTactical(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
-    const tacticalName = interaction.customId.replace('select_tactical_', '').replace(/_/g, ' ');
+    const tacticalName = selected[0];
+
+    if (tacticalName === 'none') {
+      return interaction.reply({
+        content: 'No tactical equipment available. All tactical equipment is at max capacity (3/3)!',
+        ephemeral: true,
+      });
+    }
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
@@ -104,12 +117,14 @@ export class EquipmentInteractionHandler {
   @Button('edit_equipment')
   public async onEditEquipment(@Context() [interaction]: ButtonContext) {
     return interaction.reply({
-      content: 'Click different equipment buttons above to change your selection.',
+      content: 'Select different equipment from the dropdowns above to change your selection.',
       ephemeral: true,
     });
   }
 
   private async updateEquipmentEmbed(interaction: any, setup: any) {
+    const guildId = setup.guildId;
+    
     const embed = {
       color: EMBED_COLOR,
       title: 'Lethal & Tactical Equipment',
@@ -120,8 +135,8 @@ export class EquipmentInteractionHandler {
         setup.players
           .map((p) => {
             const status = [];
-            if (p.lethal) status.push(p.lethal);
-            if (p.tactical) status.push(p.tactical);
+            if (p.lethal) status.push(this.botService.formatWithEmoji(guildId, 'lethal', p.lethal));
+            if (p.tactical) status.push(this.botService.formatWithEmoji(guildId, 'tactical', p.tactical));
             if (status.length === 2) {
               return `${p.username}: ${status.join(' | ')}`;
             }
@@ -131,37 +146,54 @@ export class EquipmentInteractionHandler {
         '\n\nTactical Limits:\n' +
         TACTICAL_EQUIPMENT.map((tac) => {
           const count = this.botService.getTacticalCount(setup, tac);
-          return `${tac}: ${count}/3`;
+          return `${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3`;
         }).join('\n'),
-      footer: { text: 'Green = Lethal | Blue/Gray = Tactical' },
+      footer: { text: 'Select from the dropdowns below' },
     };
 
-    const lethalButtons = LETHAL_EQUIPMENT.map((lethal) => ({
-      type: 2,
-      style: 3,
-      label: lethal,
-      custom_id: `select_lethal_${lethal.replace(/\s+/g, '_')}`,
+    const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => ({
+      label: this.botService.formatWithEmoji(guildId, 'lethal', lethal),
+      value: lethal,
     }));
 
-    const tacticalButtons = TACTICAL_EQUIPMENT.map((tactical) => {
+    const tacticalOptions = TACTICAL_EQUIPMENT.map((tactical) => {
       const count = this.botService.getTacticalCount(setup, tactical);
       return {
-        type: 2,
-        style: count >= 3 ? 2 : 1,
-        label: tactical,
-        custom_id: `select_tactical_${tactical.replace(/\s+/g, '_')}`,
-        disabled: count >= 3,
+        label: this.botService.formatWithEmoji(guildId, 'tactical', tactical),
+        value: tactical,
+        description: `${count}/3 used`,
       };
+    }).filter((tac) => {
+      const count = this.botService.getTacticalCount(setup, tac.value);
+      return count < 3;
     });
 
     const components = [
       {
         type: 1,
-        components: lethalButtons,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_lethal',
+            placeholder: 'Select Lethal Equipment',
+            min_values: 1,
+            max_values: 1,
+            options: lethalOptions,
+          },
+        ],
       },
       {
         type: 1,
-        components: tacticalButtons,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_tactical',
+            placeholder: 'Select Tactical Equipment',
+            min_values: 1,
+            max_values: 1,
+            options: tacticalOptions.length > 0 ? tacticalOptions : [{ label: 'All tactical at max', value: 'none', description: 'All at 3/3 capacity' }],
+          },
+        ],
       },
       {
         type: 1,

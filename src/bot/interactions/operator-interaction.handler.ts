@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Context, Button, ButtonContext } from 'necord';
+import { Context, Button, ButtonContext, StringSelect, StringSelectContext, SelectedStrings } from 'necord';
 import { BotService } from '../bot.service';
 import {
   EMBED_COLOR,
@@ -12,11 +12,21 @@ import {
 export class OperatorInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
-  @Button('select_operator_:operatorName')
-  public async onSelectOperator(@Context() [interaction]: ButtonContext) {
+  @StringSelect('select_operator')
+  public async onSelectOperator(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
     const guildId = interaction.guildId!;
     const channelId = interaction.channelId;
-    const operatorName = interaction.customId.replace('select_operator_', '').replace(/_/g, ' ');
+    const operatorName = selected[0];
+
+    if (operatorName === 'none') {
+      return interaction.reply({
+        content: 'No operators are available. All operators have been taken!',
+        ephemeral: true,
+      });
+    }
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
@@ -63,12 +73,14 @@ export class OperatorInteractionHandler {
   @Button('edit_operators')
   public async onEditOperators(@Context() [interaction]: ButtonContext) {
     return interaction.reply({
-      content: 'Click a different operator button above to change your selection.',
+      content: 'Select a different operator from the dropdown above to change your selection.',
       ephemeral: true,
     });
   }
 
   private async updateOperatorEmbed(interaction: any, setup: any) {
+    const guildId = setup.guildId;
+    
     const embed = {
       color: EMBED_COLOR,
       title: 'Operator Skills Selection',
@@ -77,7 +89,7 @@ export class OperatorInteractionHandler {
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `${p.username}: ${p.operatorSkill}`;
+              return `${p.username}: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}`;
             }
             return `${p.username} - Selecting...`;
           })
@@ -85,31 +97,35 @@ export class OperatorInteractionHandler {
         '\n\nAvailable Operators:\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
-          return taken ? `${op} (${taken.username})` : op;
+          const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+          return taken ? `${opWithEmoji} (${taken.username})` : opWithEmoji;
         }).join('\n'),
-      footer: { text: 'Click an operator button below - Each must be unique!' },
+      footer: { text: 'Select from the dropdown below - Each must be unique!' },
     };
 
     const takenOperators = setup.players
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorButtons = OPERATOR_SKILLS.map((op) => ({
-      type: 2,
-      style: takenOperators.includes(op) ? 2 : 1,
-      label: op,
-      custom_id: `select_operator_${op.replace(/\s+/g, '_')}`,
-      disabled: takenOperators.includes(op),
-    }));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
+      label: this.botService.formatWithEmoji(guildId, 'operator', op),
+      value: op,
+      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
+    })).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {
         type: 1,
-        components: operatorButtons.slice(0, 5),
-      },
-      {
-        type: 1,
-        components: operatorButtons.slice(5, 9),
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_operator',
+            placeholder: 'Select Operator Skill',
+            min_values: 1,
+            max_values: 1,
+            options: operatorOptions.length > 0 ? operatorOptions : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
+          },
+        ],
       },
       {
         type: 1,
@@ -135,6 +151,7 @@ export class OperatorInteractionHandler {
 
   private async moveToEquipment(interaction: any, setup: any) {
     setup.currentPage = 'equipment';
+    const guildId = setup.guildId;
 
     const embed = {
       color: EMBED_COLOR,
@@ -146,8 +163,8 @@ export class OperatorInteractionHandler {
         setup.players
           .map((p) => {
             const status = [];
-            if (p.lethal) status.push(p.lethal);
-            if (p.tactical) status.push(p.tactical);
+            if (p.lethal) status.push(this.botService.formatWithEmoji(guildId, 'lethal', p.lethal));
+            if (p.tactical) status.push(this.botService.formatWithEmoji(guildId, 'tactical', p.tactical));
             if (status.length === 2) {
               return `${p.username}: ${status.join(' | ')}`;
             }
@@ -157,37 +174,54 @@ export class OperatorInteractionHandler {
         '\n\nTactical Limits:\n' +
         TACTICAL_EQUIPMENT.map((tac) => {
           const count = this.botService.getTacticalCount(setup, tac);
-          return `${tac}: ${count}/3`;
+          return `${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3`;
         }).join('\n'),
-      footer: { text: 'Green = Lethal | Blue/Gray = Tactical' },
+      footer: { text: 'Select from the dropdowns below' },
     };
 
-    const lethalButtons = LETHAL_EQUIPMENT.map((lethal) => ({
-      type: 2,
-      style: 3,
-      label: lethal,
-      custom_id: `select_lethal_${lethal.replace(/\s+/g, '_')}`,
+    const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => ({
+      label: this.botService.formatWithEmoji(guildId, 'lethal', lethal),
+      value: lethal,
     }));
 
-    const tacticalButtons = TACTICAL_EQUIPMENT.map((tactical) => {
+    const tacticalOptions = TACTICAL_EQUIPMENT.map((tactical) => {
       const count = this.botService.getTacticalCount(setup, tactical);
       return {
-        type: 2,
-        style: count >= 3 ? 2 : 1,
-        label: tactical,
-        custom_id: `select_tactical_${tactical.replace(/\s+/g, '_')}`,
-        disabled: count >= 3,
+        label: this.botService.formatWithEmoji(guildId, 'tactical', tactical),
+        value: tactical,
+        description: `${count}/3 used`,
       };
+    }).filter((tac) => {
+      const count = this.botService.getTacticalCount(setup, tac.value);
+      return count < 3;
     });
 
     const components = [
       {
         type: 1,
-        components: lethalButtons,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_lethal',
+            placeholder: 'Select Lethal Equipment',
+            min_values: 1,
+            max_values: 1,
+            options: lethalOptions,
+          },
+        ],
       },
       {
         type: 1,
-        components: tacticalButtons,
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_tactical',
+            placeholder: 'Select Tactical Equipment',
+            min_values: 1,
+            max_values: 1,
+            options: tacticalOptions.length > 0 ? tacticalOptions : [{ label: 'All tactical at max', value: 'none', description: 'All at 3/3 capacity' }],
+          },
+        ],
       },
       {
         type: 1,

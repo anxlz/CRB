@@ -32,6 +32,7 @@ export class BotService {
   private managerRoles: Map<string, string> = new Map();
   private testMode: boolean = false;
   private client: Client | null = null;
+  private customEmojis: Map<string, Map<string, string>> = new Map();
 
   setClient(client: Client) {
     this.client = client;
@@ -284,5 +285,34 @@ export class BotService {
 
   getTacticalCount(setup: TeamSetup, tactical: string): number {
     return setup.players.filter((p) => p.tactical === tactical).length;
+  }
+
+  setCustomEmoji(guildId: string, category: string, item: string, emoji: string) {
+    if (!this.customEmojis.has(guildId)) {
+      this.customEmojis.set(guildId, new Map());
+    }
+    const guildEmojis = this.customEmojis.get(guildId)!;
+    guildEmojis.set(`${category}:${item}`, emoji);
+  }
+
+  getCustomEmoji(guildId: string, category: string, item: string): string | undefined {
+    const guildEmojis = this.customEmojis.get(guildId);
+    if (!guildEmojis) return undefined;
+    return guildEmojis.get(`${category}:${item}`);
+  }
+
+  getAllCustomEmojis(guildId: string): Map<string, string> | undefined {
+    return this.customEmojis.get(guildId);
+  }
+
+  removeCustomEmoji(guildId: string, category: string, item: string) {
+    const guildEmojis = this.customEmojis.get(guildId);
+    if (!guildEmojis) return;
+    guildEmojis.delete(`${category}:${item}`);
+  }
+
+  formatWithEmoji(guildId: string, category: string, item: string): string {
+    const emoji = this.getCustomEmoji(guildId, category, item);
+    return emoji ? `${emoji} ${item}` : item;
   }
 }
