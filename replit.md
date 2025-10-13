@@ -3,6 +3,17 @@
 ## Project Overview
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
+## Recent Changes (October 13, 2025)
+- Updated initial setup message to display gun roles directly (AR 0/3, SMG 0/3, Heavy 0/2, Marksman 0/2)
+- Added 💡 light emoji to Join button text in setup message
+- Expanded weapon list with comprehensive competitive meta weapons (filtered out 9 banned weapons: NA-45, SVD, XPR-50, Thumper, Shorty, SMRS, FHJ-18, Argus, D13 Sector)
+- Converted operator skills from buttons to select menus (dropdowns) for improved UX
+- Converted tactical and lethal equipment from buttons to select menus (dropdowns)
+- Added `/setemoji` command: Configure custom emojis for weapon roles, individual guns, operator skills, tactical, and lethal equipment
+- Implemented custom emoji display system: All select menus and embeds now show configured emojis alongside item names
+- Added validation guards: Prevents selection of placeholder 'none' values in operator and tactical dropdowns when options are exhausted
+- Emoji storage: Per-guild emoji configurations stored in memory (resets on bot restart)
+
 ## Recent Changes (October 12, 2025)
 - Streamlined roster setup flow: Role selection is now the first and only page (removed preview page and map voting)
 - Added dual weapon selection system: Players now select 2 weapons with cascading dropdowns
@@ -39,12 +50,13 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/sendsetup` - Manually send setup message to specified channel
 - `/testmode` - Toggle test mode (1 player = 5 players)
 - `/playerprofile` - Display player profile with stats image (defaults to author)
+- `/setemoji` - Configure custom emojis for roles, weapons, operators, tactical, and lethal equipment
 
 #### Interactive Flow
 1. **Role Selection**: Players choose 2 weapon class roles each (validated against pool limits)
 2. **Weapon Selection**: Cascading dropdowns for 2 weapons filtered by assigned roles
-3. **Operator Skills**: Buttons for unique operator selection
-4. **Equipment**: Lethal (unlimited) and Tactical (3 max per type)
+3. **Operator Skills**: Select menus (dropdowns) for unique operator selection with custom emoji support
+4. **Equipment**: Select menus (dropdowns) for Lethal (unlimited) and Tactical (3 max per type) with custom emoji support
 5. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
 
 #### Services
@@ -53,11 +65,12 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **Interaction Handlers**: Separate handlers for roles, weapons, operators, equipment, and action buttons
 
 ### Data Structure
-- In-memory storage for active setups, log channels, manager roles, and test mode state
+- In-memory storage for active setups, log channels, manager roles, test mode state, and emoji configurations
 - Setup state includes: players, role pool, current page, selections, lastQueueTime, status
 - Real-time validation for role availability and operator uniqueness
 - Logging system sends events to both console and configured Discord channel
 - Status tracking: waiting → in_progress → active → completed
+- Emoji configurations stored per-guild with support for roles, weapons, operators, tactical, and lethal equipment
 
 ### Competitive Rules Implementation
 - **Role Pool**: 3 ARs, 3 SMGs, 2 Heavy, 2 Marksman per team
@@ -80,11 +93,12 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **Output**: Console (backend bot)
 
 ## Important Notes
-- **In-Memory State**: Log channel, manager role, and test mode settings are stored in memory and reset on bot restart
+- **In-Memory State**: Log channel, manager role, test mode settings, and emoji configurations are stored in memory and reset on bot restart
 - **Test Mode**: Useful for development - allows 1 player to fill all 5 slots
 - **Manager Role Permissions**: Only users with configured manager role can start new setups (if no role set, all users can)
 - **Timestamp Tracking**: lastQueueTime updates when first player joins empty setup or after completion
 - **Status Indicators**: Visual queue lifecycle tracking with emoji indicators
+- **Custom Emojis**: Configured per-guild using `/setemoji` command, displayed in all select menus and embeds
 
 ## Future Enhancements
 - Persistent storage with database for settings
