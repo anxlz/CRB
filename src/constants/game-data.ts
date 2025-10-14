@@ -43,7 +43,9 @@ export function parseRoleCombination(combination: string): { role1: WeaponClassR
     'AR': WeaponClassRole.AR,
     'SMG': WeaponClassRole.SMG,
     'Heavy': WeaponClassRole.HEAVY,
+    'HEAVY': WeaponClassRole.HEAVY,
     'Marksman': WeaponClassRole.MARKSMAN,
+    'MARKSMAN': WeaponClassRole.MARKSMAN,
   };
   return {
     role1: roleMap[first],
