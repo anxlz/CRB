@@ -268,20 +268,6 @@ export class RoleInteractionHandler {
         type: 1,
         components: [
           {
-            type: 3,
-            custom_id: 'select_role_combination',
-            placeholder: 'Select Role Combination',
-            options: ROLE_COMBINATIONS.map((combo) => ({
-              label: combo,
-              value: combo,
-            })),
-          },
-        ],
-      },
-      {
-        type: 1,
-        components: [
-          {
             type: 2,
             style: 1,
             label: 'Join',

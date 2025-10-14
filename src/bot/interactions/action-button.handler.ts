@@ -65,21 +65,7 @@ export class ActionButtonHandler {
       footer: { text: 'COD Mobile Roster' },
     };
 
-    const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_role_combination',
-            placeholder: 'Select Role Combination',
-            options: ROLE_COMBINATIONS.map((combo) => ({
-              label: combo,
-              value: combo,
-            })),
-          },
-        ],
-      },
+    const mainComponents = [
       {
         type: 1,
         components: [
@@ -116,7 +102,30 @@ export class ActionButtonHandler {
       },
     ];
 
-    await interaction.update({ embeds: [embed], components });
+    // Update main message to show roster status
+    await interaction.update({ embeds: [embed], components: mainComponents });
+
+    // Send ephemeral role selection menu to the user
+    await interaction.followUp({
+      content: 'Select your role combination:',
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_role_combination',
+              placeholder: 'Select Role Combination',
+              options: ROLE_COMBINATIONS.map((combo) => ({
+                label: combo,
+                value: combo,
+              })),
+            },
+          ],
+        },
+      ],
+      ephemeral: true,
+    });
   }
 
   @Button('leave_setup')
@@ -186,20 +195,6 @@ export class ActionButtonHandler {
           type: 1,
           components: [
             {
-              type: 3,
-              custom_id: 'select_role_combination',
-              placeholder: 'Select Role Combination',
-              options: ROLE_COMBINATIONS.map((combo) => ({
-                label: combo,
-                value: combo,
-              })),
-            },
-          ],
-        },
-        {
-          type: 1,
-          components: [
-            {
               type: 2,
               style: 1,
               label: 'Join',
@@ -238,8 +233,43 @@ export class ActionButtonHandler {
 
   @Button('edit_roles')
   public async onEdit(@Context() [interaction]: ButtonContext) {
+    const guildId = interaction.guildId!;
+    const channelId = interaction.channelId;
+
+    const setup = this.botService.getSetup(guildId, channelId);
+    if (!setup) {
+      return interaction.reply({
+        content: 'No active setup found!',
+        ephemeral: true,
+      });
+    }
+
+    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    if (!player) {
+      return interaction.reply({
+        content: 'You are not in this setup!',
+        ephemeral: true,
+      });
+    }
+
     return interaction.reply({
-      content: 'Select a new role combination from the dropdown above to update your selection.',
+      content: 'Select a new role combination:',
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_role_combination',
+              placeholder: 'Select Role Combination',
+              options: ROLE_COMBINATIONS.map((combo) => ({
+                label: combo,
+                value: combo,
+              })),
+            },
+          ],
+        },
+      ],
       ephemeral: true,
     });
   }
