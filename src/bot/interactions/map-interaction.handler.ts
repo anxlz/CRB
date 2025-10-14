@@ -28,8 +28,13 @@ export class MapInteractionHandler {
       }
     }
 
+    const existingSetup = this.botService.getSetup(guildId, channelId);
+    const queueTime = existingSetup?.lastQueueTime 
+      ? existingSetup.lastQueueTime.toLocaleString() 
+      : new Date().toLocaleString();
+    
     this.botService.resetSetup(guildId, channelId);
-
+    
     const setupChannelEmbed = {
       color: EMBED_COLOR,
       title: 'COD Mobile Roster Setup',
@@ -38,7 +43,8 @@ export class MapInteractionHandler {
         '**AR** 0/3\n' +
         '**SMG** 0/3\n' +
         '**Marksman** 0/2\n' +
-        '**Heavy** 0/2',
+        '**Heavy** 0/2\n\n' +
+        `Last Queue Date: ${queueTime}`,
       footer: { text: '5 Players Required' },
     };
 

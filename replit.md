@@ -3,7 +3,14 @@
 ## Project Overview
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
-## Recent Changes (October 13, 2025 - Latest)
+## Recent Changes (October 14, 2025 - Latest)
+- **Improved Initial Setup UX**: Replaced role selection dropdown with Join button on first page - roles now displayed publicly, users click Join to select their role
+- **Fixed Operator Selection**: Moved interaction reply to end of handler to prevent "This interaction failed" error
+- **Enhanced setgunsmenu Command**: Added autocomplete for category parameter showing available weapon categories (AR, SMG, Marksman, Heavy, etc.)
+- **Bot Streaming Status**: Bot now displays streaming status "COD Mobile Roster" when online
+- **Updated Queue Timestamp Label**: Changed "Last Queue" to "Last Queue Date" across all embeds for clarity
+
+## Recent Changes (October 13, 2025)
 - **Updated `/setgunsmenu` Command**: Changed to accept multiple list parameters (list1-list24) with comma-separated guns instead of individual gun options
   - Supports up to 24 lists + 1 category = 25 total options (Discord's limit)
   - Creates **multi-select menu** allowing users to choose multiple guns at once
@@ -68,12 +75,13 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/setgunsmenu` - Create custom gun menus with multiple comma-separated gun lists (multi-select enabled, up to 25 guns displayed)
 
 #### Interactive Flow
-1. **Initial Page**: Role selection dropdown with Join, Leave, Edit buttons and 💡 help button (shows setup steps when clicked)
-2. **Role Selection**: Players choose 2 weapon class roles each (validated against pool limits) with bold display and user mentions
-3. **Weapon Selection**: Cascading dropdowns showing "1st Weapon (role)" and "2nd Weapon (role)" for clear selection
-4. **Operator Skills**: Select menus (dropdowns) for unique operator selection with custom emoji support
-5. **Equipment**: Select menus (dropdowns) for Lethal (unlimited) and Tactical (3 max per type) with custom emoji support
-6. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
+1. **Initial Page**: Displays gun roles publicly (AR 0/3, SMG 0/3, etc.) with Join, Leave, Edit buttons and 💡 help button
+2. **Join Setup**: Click Join button to receive ephemeral role selection dropdown
+3. **Role Selection**: Players choose 2 weapon class roles each (validated against pool limits) with bold display and user mentions
+4. **Weapon Selection**: Cascading dropdowns showing "1st Weapon (role)" and "2nd Weapon (role)" for clear selection
+5. **Operator Skills**: Select menus (dropdowns) for unique operator selection with custom emoji support
+6. **Equipment**: Select menus (dropdowns) for Lethal (unlimited) and Tactical (3 max per type) with custom emoji support
+7. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
 
 #### Services
 - **BotService**: Core business logic for setup management, validation, state tracking, and Discord logging
@@ -112,9 +120,11 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **In-Memory State**: Log channel, manager role, test mode settings, and emoji configurations are stored in memory and reset on bot restart
 - **Test Mode**: Useful for development - allows 1 player to fill all 5 slots
 - **Manager Role Permissions**: Only users with configured manager role can start new setups (if no role set, all users can)
-- **Timestamp Tracking**: lastQueueTime updates when first player joins empty setup or after completion
+- **Timestamp Tracking**: Last Queue Date updates when first player joins empty setup or after completion
 - **Status Indicators**: Visual queue lifecycle tracking with emoji indicators
 - **Custom Emojis**: Configured per-guild using `/setemoji` command, displayed in all select menus and embeds
+- **Bot Status**: Bot displays streaming status "COD Mobile Roster" when online
+- **Autocomplete**: Category parameter in `/setgunsmenu` command has autocomplete for easier selection
 
 ## Future Enhancements
 - Persistent storage with database for settings
