@@ -8,7 +8,6 @@ import { TestModeCommand } from './commands/test-mode.command';
 import { PlayerProfileCommand } from './commands/player-profile.command';
 import { SendSetupCommand } from './commands/send-setup.command';
 import { SetEmojiCommand } from './commands/set-emoji.command';
-import { SetGunsMenuCommand, CategoryAutocompleteInterceptor } from './commands/set-guns-menu.command';
 import { BotUpdate } from './bot.update';
 import { RoleInteractionHandler } from './interactions/role-interaction.handler';
 import { WeaponInteractionHandler } from './interactions/weapon-interaction.handler';
@@ -16,11 +15,16 @@ import { OperatorInteractionHandler } from './interactions/operator-interaction.
 import { EquipmentInteractionHandler } from './interactions/equipment-interaction.handler';
 import { MapInteractionHandler } from './interactions/map-interaction.handler';
 import { ActionButtonHandler } from './interactions/action-button.handler';
+import { CustomGunsService } from './custom-guns.service';
+import { AddGunCommand, CategoryAutocompleteInterceptor as AddGunCategoryInterceptor } from './commands/add-gun.command';
+import { EditGunCommand, EditGunAutocompleteInterceptor } from './commands/edit-gun.command';
+import { RemoveGunCommand, RemoveGunAutocompleteInterceptor } from './commands/remove-gun.command';
 
 @Module({
   providers: [
     BotService,
     BotUpdate,
+    CustomGunsService,
     SetupChannelsCommand,
     ResetSetupCommand,
     SetLogChannelCommand,
@@ -29,8 +33,12 @@ import { ActionButtonHandler } from './interactions/action-button.handler';
     PlayerProfileCommand,
     SendSetupCommand,
     SetEmojiCommand,
-    SetGunsMenuCommand,
-    CategoryAutocompleteInterceptor,
+    AddGunCommand,
+    AddGunCategoryInterceptor,
+    EditGunCommand,
+    EditGunAutocompleteInterceptor,
+    RemoveGunCommand,
+    RemoveGunAutocompleteInterceptor,
     RoleInteractionHandler,
     WeaponInteractionHandler,
     OperatorInteractionHandler,
