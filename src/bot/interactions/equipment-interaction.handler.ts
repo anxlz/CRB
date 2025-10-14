@@ -38,14 +38,6 @@ export class EquipmentInteractionHandler {
 
     player.lethal = lethalName;
 
-    this.botService.sendLog(guildId, '[LETHAL SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: player.username,
-      lethal: lethalName,
-      status: 'lethal_selected'
-    });
-
     if (this.botService.allPlayersReady(setup, 'equipment')) {
       await this.moveToMaps(interaction, setup);
     } else {
@@ -96,14 +88,6 @@ export class EquipmentInteractionHandler {
     }
 
     player.tactical = tacticalName;
-
-    this.botService.sendLog(guildId, '[TACTICAL SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: player.username,
-      tactical: tacticalName,
-      status: 'tactical_selected'
-    });
 
     if (this.botService.allPlayersReady(setup, 'equipment')) {
       await this.moveToMaps(interaction, setup);
@@ -263,19 +247,19 @@ export class EquipmentInteractionHandler {
 
     await interaction.update({ embeds: [embed], components });
     
-    this.botService.sendLog(guildId, '[ROSTER COMPLETE]', {
-      channelId,
-      players: setup.players.map(p => ({
-        userId: p.userId,
-        username: p.username,
-        role1: p.role1,
-        role2: p.role2,
-        weapons: p.weapons,
-        operatorSkill: p.operatorSkill,
-        lethal: p.lethal,
-        tactical: p.tactical,
-        status: 'completed'
-      }))
-    });
+    const setupText = setup.players
+      .map((p, index) => {
+        const weapons = p.weapons ? p.weapons.join(', ') : 'None';
+        return (
+          `Player ${index + 1}: ${p.username}\n` +
+          `Roles: ${p.role1} / ${p.role2}\n` +
+          `Weapons: ${weapons}\n` +
+          `Operator: ${p.operatorSkill}\n` +
+          `Equipment: ${p.lethal} | ${p.tactical}`
+        );
+      })
+      .join('\n\n');
+    
+    this.botService.sendLog(guildId, `[ROSTER COMPLETE]\n\n${setupText}`);
   }
 }

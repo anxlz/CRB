@@ -48,12 +48,6 @@ export class RoleInteractionHandler {
       };
       setup.players.push(player);
 
-      this.botService.sendLog(guildId, '[PLAYER JOINED]', {
-        channelId,
-        userId: interaction.user.id,
-        username: interaction.user.username,
-        status: 'joined'
-      });
     }
 
     const { role1, role2 } = parseRoleCombination(combination);
@@ -78,14 +72,6 @@ export class RoleInteractionHandler {
     setup.rolePool[role1]--;
     setup.rolePool[role2]--;
 
-    this.botService.sendLog(guildId, '[ROLE SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: interaction.user.username,
-      role1,
-      role2,
-      status: 'role_selected'
-    });
 
     const weapons = getRoleCombinationWeapons(combination);
 
@@ -155,14 +141,6 @@ export class RoleInteractionHandler {
 
     player.weapons = [weapon];
 
-    this.botService.sendLog(guildId, '[WEAPON 1 SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: player.username,
-      weapon,
-      status: 'weapon_1_selected'
-    });
-
     // Get weapons only from role2 for the second weapon selection
     const { WEAPONS } = require('../../constants/game-data');
     const role2Weapons = WEAPONS[player.role2] || [];
@@ -225,14 +203,6 @@ export class RoleInteractionHandler {
 
     player.weapons.push(weapon);
 
-    this.botService.sendLog(guildId, '[WEAPON 2 SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: player.username,
-      weapon,
-      status: 'weapon_2_selected'
-    });
-
     await interaction.update({
       content: `Weapons selected: **${player.weapons[0]}** and **${weapon}**`,
       components: [],
@@ -283,20 +253,6 @@ export class RoleInteractionHandler {
     };
 
     const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_role_combination',
-            placeholder: 'Select Role Combination',
-            options: ROLE_COMBINATIONS.map((combo) => ({
-              label: combo,
-              value: combo,
-            })),
-          },
-        ],
-      },
       {
         type: 1,
         components: [

@@ -53,14 +53,6 @@ export class OperatorInteractionHandler {
 
     player.operatorSkill = operatorName;
 
-    this.botService.sendLog(guildId, '[OPERATOR SELECTED]', {
-      channelId,
-      userId: interaction.user.id,
-      username: player.username,
-      operator: operatorName,
-      status: 'operator_selected'
-    });
-
     const operatorWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', operatorName);
     await interaction.reply({
       content: `You selected: **${operatorWithEmoji}**`,

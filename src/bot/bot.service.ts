@@ -108,17 +108,6 @@ export class BotService {
     
     setup.status = setup.players.length === maxPlayers ? 'active' : 'in_progress';
     
-    const logData = {
-      guildId: setup.guildId,
-      channelId: setup.channelId,
-      userId,
-      username,
-      totalPlayers: setup.players.length,
-      status: 'joined'
-    };
-    
-    this.sendLog(setup.guildId, '[PLAYER JOINED]', logData);
-    
     return true;
   }
 
@@ -129,17 +118,6 @@ export class BotService {
     const player = setup.players[index];
     if (player.role1) setup.rolePool[player.role1]++;
     if (player.role2) setup.rolePool[player.role2]++;
-    
-    const logData = {
-      guildId: setup.guildId,
-      channelId: setup.channelId,
-      userId: player.userId,
-      username: player.username,
-      totalPlayers: setup.players.length - 1,
-      status: 'left'
-    };
-    
-    this.sendLog(setup.guildId, '[PLAYER LEFT]', logData);
     
     setup.players.splice(index, 1);
     
