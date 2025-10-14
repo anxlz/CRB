@@ -149,31 +149,30 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
       );
     }
     
-    // Handle list autocomplete
+    // Handle list autocomplete - show ALL available lists for the category
     if (focused.name.startsWith('list')) {
-      const listNumber = parseInt(focused.name.replace('list', ''));
       const category = interaction.options.getString('category');
       
       if (category) {
         const weaponLists = getWeaponListsForCategory(category);
-        const listIndex = listNumber - 1;
         
-        if (weaponLists[listIndex]) {
-          const fullList = weaponLists[listIndex];
-          const gunCount = fullList.split(', ').length;
+        if (weaponLists.length > 0) {
+          // Show all available lists for this category
+          const options = weaponLists.map((fullList, index) => {
+            const listNumber = index + 1;
+            const gunCount = fullList.split(', ').length;
+            const shortValue = `${category.toUpperCase()}_LIST_${listNumber}`;
+            const displayName = `${category} - List ${listNumber} (${gunCount} guns)`;
+            
+            // Ensure name doesn't exceed 100 chars
+            const truncatedName = displayName.length > 100 
+              ? displayName.substring(0, 97) + '...' 
+              : displayName;
+            
+            return { name: truncatedName, value: shortValue };
+          });
           
-          // Use a short identifier as value to avoid 100-char limit
-          const shortValue = `${category.toUpperCase()}_LIST_${listNumber}`;
-          const displayName = `${category} - List ${listNumber} (${gunCount} guns)`;
-          
-          // Ensure name doesn't exceed 100 chars
-          const truncatedName = displayName.length > 100 
-            ? displayName.substring(0, 97) + '...' 
-            : displayName;
-          
-          return interaction.respond([
-            { name: truncatedName, value: shortValue }
-          ]);
+          return interaction.respond(options.slice(0, 25));
         }
       }
     }
