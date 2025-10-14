@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Context, SlashCommand, SlashCommandContext, Options, StringOption } from 'necord';
+import { Context, SlashCommand, SlashCommandContext, Options, StringOption, Autocomplete, AutocompleteInteraction } from 'necord';
 import { BotService } from '../bot.service';
 import { EMBED_COLOR } from '../../constants/game-data';
 
 class SetGunsMenuDto {
   @StringOption({
     name: 'category',
-    description: 'Gun category name',
+    description: 'Gun category name (AR, SMG, Marksman, Heavy, Sniper, LMG, Shotgun, Pistol)',
     required: true,
+    autocomplete: true,
   })
   category: string;
 
@@ -132,6 +133,20 @@ export const GUN_LISTS = {
 @Injectable()
 export class SetGunsMenuCommand {
   constructor(private readonly botService: BotService) {}
+
+  @Autocomplete('setgunsmenu', 'category')
+  async onCategoryAutocomplete(@Context() [interaction]: AutocompleteInteraction) {
+    const categories = ['AR', 'SMG', 'Marksman', 'Heavy', 'Sniper', 'LMG', 'Shotgun', 'Pistol'];
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    
+    const filtered = categories.filter(cat => 
+      cat.toLowerCase().includes(focusedValue)
+    );
+    
+    return interaction.respond(
+      filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
+    );
+  }
 
   @SlashCommand({
     name: 'setgunsmenu',
