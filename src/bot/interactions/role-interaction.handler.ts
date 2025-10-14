@@ -12,6 +12,12 @@ import {
 export class RoleInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
+  // Helper to truncate labels to Discord's 100-char limit
+  private truncateLabel(label: string, maxLength: number = 100): string {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + '...';
+  }
+
   @StringSelect('select_role_combination')
   public async onSelectRoleCombination(
     @Context() [interaction]: StringSelectContext,
@@ -82,10 +88,13 @@ export class RoleInteractionHandler {
 
     const weaponOptions = weapons
       .slice(0, 25)
-      .map((weapon) => ({
-        label: this.botService.formatWithEmoji(guildId, 'weapon', weapon),
-        value: weapon,
-      }));
+      .map((weapon) => {
+        const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
+        return {
+          label: this.truncateLabel(labelWithEmoji),
+          value: weapon,
+        };
+      });
 
     const components = [
       {
@@ -146,10 +155,13 @@ export class RoleInteractionHandler {
     const weaponOptions = role2Weapons
       .filter(w => w !== weapon)
       .slice(0, 25)
-      .map((w) => ({
-        label: this.botService.formatWithEmoji(guildId, 'weapon', w),
-        value: w,
-      }));
+      .map((w) => {
+        const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', w);
+        return {
+          label: this.truncateLabel(labelWithEmoji),
+          value: w,
+        };
+      });
 
     const components = [
       {
@@ -413,11 +425,17 @@ export class RoleInteractionHandler {
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
-      label: this.botService.formatWithEmoji(guildId, 'operator', op),
-      value: op,
-      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
-    })).filter((op) => !takenOperators.includes(op.value));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => {
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+      const takenPlayer = setup.players.find(p => p.operatorSkill === op);
+      const description = takenOperators.includes(op) ? `Taken by ${takenPlayer?.username}` : undefined;
+      
+      return {
+        label: this.truncateLabel(labelWithEmoji),
+        value: op,
+        description: description ? this.truncateLabel(description, 100) : undefined,
+      };
+    }).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {

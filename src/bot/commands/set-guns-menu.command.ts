@@ -159,12 +159,20 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
         const listIndex = listNumber - 1;
         
         if (weaponLists[listIndex]) {
-          const value = weaponLists[listIndex];
-          const preview = value.length > 100 ? value.substring(0, 97) + '...' : value;
+          const fullList = weaponLists[listIndex];
+          const gunCount = fullList.split(', ').length;
+          
+          // Use a short identifier as value to avoid 100-char limit
+          const shortValue = `${category.toUpperCase()}_LIST_${listNumber}`;
+          const displayName = `${category} - List ${listNumber} (${gunCount} guns)`;
+          
+          // Ensure name doesn't exceed 100 chars
+          const truncatedName = displayName.length > 100 
+            ? displayName.substring(0, 97) + '...' 
+            : displayName;
           
           return interaction.respond([
-            { name: `${category} - List ${listNumber} (${value.split(', ').length} guns)`, value: value },
-            { name: `Preview: ${preview}`, value: value }
+            { name: truncatedName, value: shortValue }
           ]);
         }
       }
@@ -195,14 +203,33 @@ export class SetGunsMenuCommand {
       });
     }
 
-    // Collect all list options
-    const lists = [
+    // Helper function to resolve list identifiers to actual weapon lists
+    const resolveList = (listValue: string): string => {
+      // Check if it's a short identifier (e.g., "AR_LIST_1")
+      const pattern = /^([A-Z]+)_LIST_(\d+)$/;
+      const match = listValue.match(pattern);
+      
+      if (match) {
+        const [, category, listNum] = match;
+        const weaponLists = getWeaponListsForCategory(category);
+        const listIndex = parseInt(listNum) - 1;
+        return weaponLists[listIndex] || listValue;
+      }
+      
+      // Otherwise, treat as custom comma-separated list
+      return listValue;
+    };
+
+    // Collect all list options and resolve them
+    const rawLists = [
       options.list1, options.list2, options.list3, options.list4, options.list5,
       options.list6, options.list7, options.list8, options.list9, options.list10,
       options.list11, options.list12, options.list13, options.list14, options.list15,
       options.list16, options.list17, options.list18, options.list19, options.list20,
       options.list21, options.list22, options.list23, options.list24,
     ].filter((list): list is string => list !== undefined && list !== null && list.trim().length > 0);
+    
+    const lists = rawLists.map(resolveList);
 
     if (lists.length === 0) {
       // Show help message with weapon lists from database

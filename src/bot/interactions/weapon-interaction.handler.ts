@@ -10,6 +10,12 @@ import {
 export class WeaponInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
+  // Helper to truncate labels to Discord's 100-char limit
+  private truncateLabel(label: string, maxLength: number = 100): string {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + '...';
+  }
+
   @StringSelect('select_weapons')
   public async onSelectWeapons(
     @Context() [interaction]: StringSelectContext,
@@ -88,10 +94,13 @@ export class WeaponInteractionHandler {
             placeholder: 'Select Your Weapons',
             min_values: 1,
             max_values: Math.min(availableWeapons.length, 25),
-            options: availableWeapons.map((weapon) => ({
-              label: this.botService.formatWithEmoji(guildId, 'weapon', weapon),
-              value: weapon,
-            })),
+            options: availableWeapons.map((weapon) => {
+              const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
+              return {
+                label: this.truncateLabel(labelWithEmoji),
+                value: weapon,
+              };
+            }),
           },
         ],
       },
@@ -147,11 +156,17 @@ export class WeaponInteractionHandler {
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
-      label: this.botService.formatWithEmoji(guildId, 'operator', op),
-      value: op,
-      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
-    })).filter((op) => !takenOperators.includes(op.value));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => {
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+      const takenPlayer = setup.players.find(p => p.operatorSkill === op);
+      const description = takenOperators.includes(op) ? `Taken by ${takenPlayer?.username}` : undefined;
+      
+      return {
+        label: this.truncateLabel(labelWithEmoji),
+        value: op,
+        description: description ? this.truncateLabel(description, 100) : undefined,
+      };
+    }).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {

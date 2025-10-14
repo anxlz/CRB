@@ -12,6 +12,12 @@ import {
 export class OperatorInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
+  // Helper to truncate labels to Discord's 100-char limit
+  private truncateLabel(label: string, maxLength: number = 100): string {
+    if (label.length <= maxLength) return label;
+    return label.substring(0, maxLength - 3) + '...';
+  }
+
   @StringSelect('select_operator')
   public async onSelectOperator(
     @Context() [interaction]: StringSelectContext,
@@ -108,11 +114,17 @@ export class OperatorInteractionHandler {
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
-      label: this.botService.formatWithEmoji(guildId, 'operator', op),
-      value: op,
-      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
-    })).filter((op) => !takenOperators.includes(op.value));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => {
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+      const takenPlayer = setup.players.find(p => p.operatorSkill === op);
+      const description = takenOperators.includes(op) ? `Taken by ${takenPlayer?.username}` : undefined;
+      
+      return {
+        label: this.truncateLabel(labelWithEmoji),
+        value: op,
+        description: description ? this.truncateLabel(description, 100) : undefined,
+      };
+    }).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {
@@ -180,17 +192,23 @@ export class OperatorInteractionHandler {
       footer: { text: 'Select from the dropdowns below' },
     };
 
-    const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => ({
-      label: this.botService.formatWithEmoji(guildId, 'lethal', lethal),
-      value: lethal,
-    }));
+    const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => {
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'lethal', lethal);
+      return {
+        label: this.truncateLabel(labelWithEmoji),
+        value: lethal,
+      };
+    });
 
     const tacticalOptions = TACTICAL_EQUIPMENT.map((tactical) => {
       const count = this.botService.getTacticalCount(setup, tactical);
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'tactical', tactical);
+      const description = `${count}/3 used`;
+      
       return {
-        label: this.botService.formatWithEmoji(guildId, 'tactical', tactical),
+        label: this.truncateLabel(labelWithEmoji),
         value: tactical,
-        description: `${count}/3 used`,
+        description: this.truncateLabel(description, 100),
       };
     }).filter((tac) => {
       const count = this.botService.getTacticalCount(setup, tac.value);
