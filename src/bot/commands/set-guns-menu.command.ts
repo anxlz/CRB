@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { Context, SlashCommand, SlashCommandContext, Options, StringOption, Autocomplete, AutocompleteInteraction } from 'necord';
+import { Injectable, UseInterceptors } from '@nestjs/common';
+import { Context, SlashCommand, SlashCommandContext, Options, StringOption, AutocompleteInterceptor } from 'necord';
+import { AutocompleteInteraction } from 'discord.js';
 import { BotService } from '../bot.service';
 import { EMBED_COLOR } from '../../constants/game-data';
 
@@ -131,23 +132,30 @@ export const GUN_LISTS = {
 };
 
 @Injectable()
+export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
+  public transformOptions(interaction: AutocompleteInteraction) {
+    const focused = interaction.options.getFocused(true);
+    const categories = ['AR', 'SMG', 'Marksman', 'Heavy', 'Sniper', 'LMG', 'Shotgun', 'Pistol'];
+    
+    if (focused.name === 'category') {
+      const filtered = categories.filter(cat => 
+        cat.toLowerCase().includes(focused.value.toString().toLowerCase())
+      );
+      
+      return interaction.respond(
+        filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
+      );
+    }
+    
+    return interaction.respond([]);
+  }
+}
+
+@Injectable()
 export class SetGunsMenuCommand {
   constructor(private readonly botService: BotService) {}
 
-  @Autocomplete('setgunsmenu', 'category')
-  async onCategoryAutocomplete(@Context() [interaction]: AutocompleteInteraction) {
-    const categories = ['AR', 'SMG', 'Marksman', 'Heavy', 'Sniper', 'LMG', 'Shotgun', 'Pistol'];
-    const focusedValue = interaction.options.getFocused().toLowerCase();
-    
-    const filtered = categories.filter(cat => 
-      cat.toLowerCase().includes(focusedValue)
-    );
-    
-    return interaction.respond(
-      filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
-    );
-  }
-
+  @UseInterceptors(CategoryAutocompleteInterceptor)
   @SlashCommand({
     name: 'setgunsmenu',
     description: 'Set custom guns menu with category (supports multiple lists)',

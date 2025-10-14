@@ -12,6 +12,16 @@ export class BotUpdate {
   public async onReady(@Context() [client]: [Client]) {
     console.log(`Bot logged in as ${client.user?.tag}`);
     
+    // Set bot status to streaming
+    client.user?.setPresence({
+      activities: [{
+        name: 'COD Mobile Roster',
+        type: 1, // 1 = Streaming
+        url: 'https://twitch.tv/codmobile'
+      }],
+      status: 'online'
+    });
+    
     this.botService.setClient(client);
     
     const setupChannels = await this.sendSetupMessages(client);
