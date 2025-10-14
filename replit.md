@@ -4,7 +4,8 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 14, 2025 - Latest)
-- **Improved Initial Setup UX**: Replaced role selection dropdown with Join button on first page - roles now displayed publicly, users click Join to select their role
+- **Streamlined Role Selection UX**: Replaced Join button with role selection dropdown directly on main setup message - all users can now see and use the dropdown without clicking Join first
+- **Operator Skills Dropdown**: Converted operator skills from buttons to select menu (dropdown) for cleaner UI
 - **Fixed Operator Selection**: Moved interaction reply to end of handler to prevent "This interaction failed" error
 - **Enhanced setgunsmenu Command**: Added autocomplete for category parameter showing available weapon categories (AR, SMG, Marksman, Heavy, etc.)
 - **Bot Streaming Status**: Bot now displays streaming status "COD Mobile Roster" when online
@@ -75,13 +76,12 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/setgunsmenu` - Create custom gun menus with multiple comma-separated gun lists (multi-select enabled, up to 25 guns displayed)
 
 #### Interactive Flow
-1. **Initial Page**: Displays gun roles publicly (AR 0/3, SMG 0/3, etc.) with Join, Leave, Edit buttons and 💡 help button
-2. **Join Setup**: Click Join button to receive ephemeral role selection dropdown
-3. **Role Selection**: Players choose 2 weapon class roles each (validated against pool limits) with bold display and user mentions
-4. **Weapon Selection**: Cascading dropdowns showing "1st Weapon (role)" and "2nd Weapon (role)" for clear selection
-5. **Operator Skills**: Select menus (dropdowns) for unique operator selection with custom emoji support
-6. **Equipment**: Select menus (dropdowns) for Lethal (unlimited) and Tactical (3 max per type) with custom emoji support
-7. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
+1. **Initial Page**: Displays gun roles publicly (AR 0/3, SMG 0/3, etc.) with role selection dropdown, Leave, Edit buttons and 💡 help button
+2. **Role Selection**: Players choose 2 weapon class roles each from the dropdown (validated against pool limits) with bold display and user mentions
+3. **Weapon Selection**: Cascading dropdowns showing "1st Weapon (role)" and "2nd Weapon (role)" for clear selection
+4. **Operator Skills**: Select menus (dropdowns) for unique operator selection with custom emoji support
+5. **Equipment**: Select menus (dropdowns) for Lethal (unlimited) and Tactical (3 max per type) with custom emoji support
+6. **Setup Complete**: Final roster display with "Start New Setup" button (only visible to manager role)
 
 #### Services
 - **BotService**: Core business logic for setup management, validation, state tracking, and Discord logging

@@ -70,11 +70,19 @@ export class ActionButtonHandler {
         type: 1,
         components: [
           {
-            type: 2,
-            style: 1,
-            label: 'Join',
-            custom_id: 'join_setup',
+            type: 3,
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
+            })),
           },
+        ],
+      },
+      {
+        type: 1,
+        components: [
           {
             type: 2,
             style: 4,
@@ -104,28 +112,6 @@ export class ActionButtonHandler {
 
     // Update main message to show roster status
     await interaction.update({ embeds: [embed], components: mainComponents });
-
-    // Send ephemeral role selection menu to the user
-    await interaction.followUp({
-      content: 'Select your role combination:',
-      components: [
-        {
-          type: 1,
-          components: [
-            {
-              type: 3,
-              custom_id: 'select_role_combination',
-              placeholder: 'Select Role Combination',
-              options: ROLE_COMBINATIONS.map((combo) => ({
-                label: combo,
-                value: combo,
-              })),
-            },
-          ],
-        },
-      ],
-      ephemeral: true,
-    });
   }
 
   @Button('leave_setup')
@@ -195,11 +181,19 @@ export class ActionButtonHandler {
           type: 1,
           components: [
             {
-              type: 2,
-              style: 1,
-              label: 'Join',
-              custom_id: 'join_setup',
+              type: 3,
+              custom_id: 'select_role_combination',
+              placeholder: 'Select Role Combination',
+              options: ROLE_COMBINATIONS.map((combo) => ({
+                label: combo,
+                value: combo,
+              })),
             },
+          ],
+        },
+        {
+          type: 1,
+          components: [
             {
               type: 2,
               style: 4,

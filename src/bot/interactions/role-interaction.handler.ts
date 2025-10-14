@@ -255,6 +255,20 @@ export class RoleInteractionHandler {
         type: 1,
         components: [
           {
+            type: 3,
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
+            })),
+          },
+        ],
+      },
+      {
+        type: 1,
+        components: [
+          {
             type: 2,
             style: 4,
             label: 'Leave',
@@ -318,7 +332,7 @@ export class RoleInteractionHandler {
         footer: { text: 'COD Mobile Roster' },
       };
 
-      const components = [
+      const roleComponents = [
         {
           type: 1,
           components: [
@@ -363,7 +377,7 @@ export class RoleInteractionHandler {
         },
       ];
 
-      await message.edit({ embeds: [embed], components });
+      await message.edit({ embeds: [embed], components: roleComponents });
       return;
     }
 

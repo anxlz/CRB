@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Context, SlashCommand, SlashCommandContext, Options, ChannelOption } from 'necord';
 import { Channel, TextChannel } from 'discord.js';
 import { BotService } from '../bot.service';
-import { EMBED_COLOR } from '../../constants/game-data';
+import { EMBED_COLOR, ROLE_COMBINATIONS } from '../../constants/game-data';
 
 class SetupChannelDto {
   @ChannelOption({
@@ -105,11 +105,19 @@ export class SetupChannelsCommand {
         type: 1,
         components: [
           {
-            type: 2,
-            style: 1,
-            label: 'Join',
-            custom_id: 'join_setup',
+            type: 3,
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
+            })),
           },
+        ],
+      },
+      {
+        type: 1,
+        components: [
           {
             type: 2,
             style: 4,
