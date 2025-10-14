@@ -4,25 +4,15 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 14, 2025 - Latest)
-- **Fixed Discord API 100-Character Limits**: Resolved errors with autocomplete and select menu options
-  - `/setgunsmenu` autocomplete now uses short identifiers (e.g., "AR_LIST_1") instead of full weapon lists to stay under 100-char limit
-  - Command automatically resolves identifiers back to full weapon lists when processing
-  - Added label truncation across all select menus (weapons, operators, equipment) to prevent emoji+name combinations from exceeding 100 chars
-  - Descriptions in select menus also truncated to respect Discord's limits
-- **Simplified `/setgunsmenu` Command**: Now automatically shows all individual guns as selectable options
-  - Just use `/setgunsmenu category:AR` to create a menu with all AR guns as options
-  - Automatically splits into multiple menus if category has more than 25 guns (Discord limit)
-  - Each gun appears as an individual option users can select
-  - Multi-select enabled so users can pick multiple guns at once
-  - No need to manually specify lists anymore (but you still can if you want custom lists)
-- **Auto-populated Weapon Lists**: Created weapon database from COD Mobile weapons file with automatic parsing and categorization
-  - Parses 34 Assault Rifles, 29 SMGs, 11 Snipers, 13 LMGs, 10 Shotguns, 7 Marksman Rifles, 9 Pistols
-  - Automatically removes banned weapons (NA-45, SVD, XPR-50, Argus, Shorty) and season info from weapon names
-  - Splits weapons into chunks of 24 per list (e.g., AR has 2 lists: 24 guns + 10 guns)
-- **Enhanced `/setgunsmenu` Autocomplete**: List parameters now show pre-filled weapon options from database
-  - When you select a category, list1/list2/list3 autocomplete shows actual gun lists
-  - Shows gun count and preview for each list (e.g., "AR - List 1 (24 guns)")
-  - No manual typing needed - just select from autocomplete options
+- **New Custom Gun Management System**: Replaced `/setgunsmenu` with three new commands for managing custom guns
+  - `/addgun` - Add custom guns to categories with autocomplete (e.g., `/addgun category:AR gun_name:Type 25`)
+  - `/editgun` - Edit existing custom guns (rename or change category) with autocomplete for gun selection
+  - `/removegun` - Remove custom guns from categories with autocomplete for gun selection
+  - **Guild-Scoped Storage**: Each Discord server has its own isolated gun database (no cross-server data leakage)
+  - **JSON Persistence**: Custom guns saved to `data/custom-guns.json` and persist across bot restarts
+  - **Smart Autocomplete**: All commands feature category autocomplete, and edit/remove commands show only guns available in the selected category
+  - **Validation**: Prevents duplicate guns, validates categories, and shows detailed error messages
+  - Removed old `/setgunsmenu` command completely
 - **Streamlined Role Selection UX**: Replaced Join button with role selection dropdown directly on main setup message - all users can now see and use the dropdown without clicking Join first
 - **Operator Skills Dropdown**: Converted operator skills from buttons to select menu (dropdown) for cleaner UI
 - **Fixed Operator Selection**: Moved interaction reply to end of handler to prevent "This interaction failed" error
@@ -91,7 +81,9 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/testmode` - Toggle test mode (1 player = 5 players)
 - `/playerprofile` - Display player profile with stats image (defaults to author)
 - `/setemoji` - Configure custom emojis for roles, weapons, operators, tactical, and lethal equipment
-- `/setgunsmenu` - Create custom gun menus with auto-populated weapon lists from database (multi-select enabled, autocomplete with pre-filled guns)
+- `/addgun` - Add custom guns to categories with autocomplete (guild-scoped)
+- `/editgun` - Edit existing custom guns (rename or change category) with autocomplete
+- `/removegun` - Remove custom guns from categories with autocomplete
 
 #### Interactive Flow
 1. **Initial Page**: Displays gun roles publicly (AR 0/3, SMG 0/3, etc.) with role selection dropdown, Leave, Edit buttons and 💡 help button
@@ -103,11 +95,13 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 
 #### Services
 - **BotService**: Core business logic for setup management, validation, state tracking, and Discord logging
+- **CustomGunsService**: Guild-scoped custom gun management with JSON persistence
 - **BotUpdate**: Event handlers for bot lifecycle and client setup
 - **Interaction Handlers**: Separate handlers for roles, weapons, operators, equipment, and action buttons
 
 ### Data Structure
 - In-memory storage for active setups, log channels, manager roles, test mode state, and emoji configurations
+- Custom guns stored in `data/custom-guns.json` with guild-scoped isolation (each server has separate gun database)
 - Setup state includes: players, role pool, current page, selections, lastQueueTime, status
 - Real-time validation for role availability and operator uniqueness
 - Logging system sends events to both console and configured Discord channel
@@ -136,13 +130,14 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 
 ## Important Notes
 - **In-Memory State**: Log channel, manager role, test mode settings, and emoji configurations are stored in memory and reset on bot restart
+- **Custom Gun Persistence**: Custom guns are persisted to `data/custom-guns.json` and survive bot restarts (guild-scoped)
 - **Test Mode**: Useful for development - allows 1 player to fill all 5 slots
 - **Manager Role Permissions**: Only users with configured manager role can start new setups (if no role set, all users can)
 - **Timestamp Tracking**: Last Queue Date updates when first player joins empty setup or after completion
 - **Status Indicators**: Visual queue lifecycle tracking with emoji indicators
 - **Custom Emojis**: Configured per-guild using `/setemoji` command, displayed in all select menus and embeds
 - **Bot Status**: Bot displays streaming status "COD Mobile Roster" when online
-- **Autocomplete**: Category parameter in `/setgunsmenu` command has autocomplete for easier selection
+- **Guild Isolation**: Custom guns are completely isolated per Discord server (no cross-server data sharing)
 
 ## Future Enhancements
 - Persistent storage with database for settings
