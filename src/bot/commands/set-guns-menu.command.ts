@@ -139,9 +139,10 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
     const categories = ['AR', 'SMG', 'Marksman', 'Heavy', 'Sniper', 'LMG', 'Shotgun', 'Pistol'];
     
     if (focused.name === 'category') {
-      const filtered = categories.filter(cat => 
-        cat.toLowerCase().includes(focused.value.toString().toLowerCase())
-      );
+      const searchValue = focused.value.toString().toLowerCase();
+      const filtered = searchValue === '' 
+        ? categories 
+        : categories.filter(cat => cat.toLowerCase().includes(searchValue));
       
       return interaction.respond(
         filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
