@@ -4,6 +4,11 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 14, 2025 - Latest)
+- **Fixed Discord API 100-Character Limits**: Resolved errors with autocomplete and select menu options
+  - `/setgunsmenu` autocomplete now uses short identifiers (e.g., "AR_LIST_1") instead of full weapon lists to stay under 100-char limit
+  - Command automatically resolves identifiers back to full weapon lists when processing
+  - Added label truncation across all select menus (weapons, operators, equipment) to prevent emoji+name combinations from exceeding 100 chars
+  - Descriptions in select menus also truncated to respect Discord's limits
 - **Auto-populated Weapon Lists**: Created weapon database from COD Mobile weapons file with automatic parsing and categorization
   - Parses 34 Assault Rifles, 29 SMGs, 11 Snipers, 13 LMGs, 10 Shotguns, 7 Marksman Rifles, 9 Pistols
   - Automatically removes banned weapons (NA-45, SVD, XPR-50, Argus, Shorty) and season info from weapon names
