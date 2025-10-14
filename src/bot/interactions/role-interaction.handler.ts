@@ -371,6 +371,8 @@ export class RoleInteractionHandler {
 
     const { OPERATOR_SKILLS } = require('../../constants/game-data');
 
+    const guildId = setup.guildId;
+    
     const embed = {
       color: EMBED_COLOR,
       title: 'Operator Skills Selection',
@@ -379,7 +381,7 @@ export class RoleInteractionHandler {
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `${p.username}: ${p.operatorSkill}`;
+              return `${p.username}: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}`;
             }
             return `${p.username} - Selecting...`;
           })
@@ -387,31 +389,35 @@ export class RoleInteractionHandler {
         '\n\nAvailable Operators:\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
-          return taken ? `${op} (${taken.username})` : op;
+          const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
+          return taken ? `${opWithEmoji} (${taken.username})` : opWithEmoji;
         }).join('\n'),
-      footer: { text: 'Click an operator button below - Each must be unique!' },
+      footer: { text: 'Select from the dropdown below - Each must be unique!' },
     };
 
     const takenOperators = setup.players
       .filter((p) => p.operatorSkill)
       .map((p) => p.operatorSkill);
 
-    const operatorButtons = OPERATOR_SKILLS.map((op) => ({
-      type: 2,
-      style: takenOperators.includes(op) ? 2 : 1,
-      label: op,
-      custom_id: `select_operator_${op.replace(/\s+/g, '_')}`,
-      disabled: takenOperators.includes(op),
-    }));
+    const operatorOptions = OPERATOR_SKILLS.map((op) => ({
+      label: this.botService.formatWithEmoji(guildId, 'operator', op),
+      value: op,
+      description: takenOperators.includes(op) ? `Taken by ${setup.players.find(p => p.operatorSkill === op)?.username}` : undefined,
+    })).filter((op) => !takenOperators.includes(op.value));
 
     const components = [
       {
         type: 1,
-        components: operatorButtons.slice(0, 5),
-      },
-      {
-        type: 1,
-        components: operatorButtons.slice(5, 9),
+        components: [
+          {
+            type: 3,
+            custom_id: 'select_operator',
+            placeholder: 'Select Operator Skill',
+            min_values: 1,
+            max_values: 1,
+            options: operatorOptions.length > 0 ? operatorOptions : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
+          },
+        ],
       },
       {
         type: 1,
