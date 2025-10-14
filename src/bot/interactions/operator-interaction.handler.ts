@@ -61,13 +61,22 @@ export class OperatorInteractionHandler {
       status: 'operator_selected'
     });
 
-    if (this.botService.allPlayersReady(setup, 'operators')) {
-      await this.moveToEquipment(interaction, setup);
-    } else {
-      await this.updateOperatorEmbed(interaction, setup);
-    }
+    const operatorWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', operatorName);
+    await interaction.reply({
+      content: `You selected: **${operatorWithEmoji}**`,
+      ephemeral: true,
+    });
 
     this.botService.updateSetup(guildId, channelId, setup);
+
+    const message = await interaction.channel?.messages.fetch(setup.messageId!);
+    if (message) {
+      if (this.botService.allPlayersReady(setup, 'operators')) {
+        await this.moveToEquipment(message, setup);
+      } else {
+        await this.updateOperatorEmbed(message, setup);
+      }
+    }
   }
 
   @Button('edit_operators')
@@ -78,7 +87,7 @@ export class OperatorInteractionHandler {
     });
   }
 
-  private async updateOperatorEmbed(interaction: any, setup: any) {
+  private async updateOperatorEmbed(message: any, setup: any) {
     const guildId = setup.guildId;
     
     const embed = {
@@ -146,10 +155,10 @@ export class OperatorInteractionHandler {
       },
     ];
 
-    await interaction.update({ embeds: [embed], components });
+    await message.edit({ embeds: [embed], components });
   }
 
-  private async moveToEquipment(interaction: any, setup: any) {
+  private async moveToEquipment(message: any, setup: any) {
     setup.currentPage = 'equipment';
     const guildId = setup.guildId;
 
@@ -242,6 +251,6 @@ export class OperatorInteractionHandler {
       },
     ];
 
-    await interaction.update({ embeds: [embed], components });
+    await message.edit({ embeds: [embed], components });
   }
 }
