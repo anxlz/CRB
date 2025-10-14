@@ -52,7 +52,7 @@ export class BotUpdate {
               '**SMG** 0/3\n' +
               '**Marksman** 0/2\n' +
               '**Heavy** 0/2\n\n' +
-              `Last Queue: ${queueTime}`,
+              `Last Queue Date: ${queueTime}`,
             footer: { text: '5 Players Required' },
           };
 

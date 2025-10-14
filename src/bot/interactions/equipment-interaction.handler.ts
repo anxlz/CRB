@@ -227,7 +227,7 @@ export class EquipmentInteractionHandler {
         'Your team configuration is complete!\n\n' +
         playersList +
         '\n\nSetup Complete - Ready for Tournament!' +
-        `\n\nLast Queue: ${queueTime}`,
+        `\n\nLast Queue Date: ${queueTime}`,
       footer: { text: 'COD Mobile Esports' },
     };
 

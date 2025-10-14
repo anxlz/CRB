@@ -246,7 +246,7 @@ export class RoleInteractionHandler {
           })
           .join('\n') + '\n\n' +
         `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-        `Last Queue: ${queueTime}`,
+        `Last Queue Date: ${queueTime}`,
       footer: { text: 'COD Mobile Roster' },
     };
 
@@ -314,7 +314,7 @@ export class RoleInteractionHandler {
             })
             .join('\n') + '\n\n' +
           `AR ${3 - setup.rolePool[WeaponClassRole.AR]}/3\nSMG ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\nMarksman ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\nHeavy ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-          `Last Queue: ${queueTime}`,
+          `Last Queue Date: ${queueTime}`,
         footer: { text: 'COD Mobile Roster' },
       };
 
