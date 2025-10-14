@@ -188,7 +188,7 @@ export class SetGunsMenuCommand {
   @UseInterceptors(CategoryAutocompleteInterceptor)
   @SlashCommand({
     name: 'setgunsmenu',
-    description: 'Set custom guns menu with category (supports multiple lists)',
+    description: 'Create gun selection menu for a category (shows all guns as options)',
   })
   async onSetGunsMenu(
     @Context() [interaction]: SlashCommandContext,
@@ -231,26 +231,18 @@ export class SetGunsMenuCommand {
     const lists = rawLists.map(resolveList);
 
     if (lists.length === 0) {
-      // Show help message with weapon lists from database
+      // Auto-load ALL guns for the category
       const weaponLists = getWeaponListsForCategory(options.category);
       
       if (weaponLists.length > 0) {
-        const listsInfo = weaponLists
-          .map((list, index) => `**list${index + 1}:** ${list.split(', ').length} guns`)
-          .join('\n');
-        
-        const firstListPreview = weaponLists[0].substring(0, 80) + '...';
-        
+        // Combine all lists for this category
+        lists.push(...weaponLists);
+      } else {
         return interaction.reply({
-          content: `ℹ️ **Available weapon lists for ${options.category}:**\n\n${listsInfo}\n\n**How to use:**\n1. Type \`/setgunsmenu category:${options.category}\`\n2. Start typing in list1, list2, etc. to see autocomplete options\n3. Select the pre-filled gun lists from autocomplete\n\n**Example:** \`list1:${firstListPreview}\``,
+          content: `❌ No weapons found for category: ${options.category}`,
           ephemeral: true,
         });
       }
-      
-      return interaction.reply({
-        content: '❌ No gun lists provided! Please add at least one list with comma-separated guns.',
-        ephemeral: true,
-      });
     }
 
     // Parse all guns from all lists
@@ -288,44 +280,55 @@ export class SetGunsMenuCommand {
       });
     }
 
-    // Create multi-select menu (up to 25 options)
-    const selectMenuOptions = allowedGuns.slice(0, 25).map(gun => ({
-      label: gun,
-      value: gun,
-    }));
+    // Create select menus - split into chunks of 25 if needed
+    const menuChunks: string[][] = [];
+    for (let i = 0; i < allowedGuns.length; i += 25) {
+      menuChunks.push(allowedGuns.slice(i, i + 25));
+    }
 
-    const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: `custom_gun_select_${options.category.toLowerCase().replace(/\s+/g, '_')}`,
-            placeholder: `Select weapon(s) from ${options.category}`,
-            min_values: 1,
-            max_values: Math.min(allowedGuns.length, 25),
-            options: selectMenuOptions,
-          },
-        ],
-      },
-    ];
+    // Send each menu as a separate message
+    for (let i = 0; i < menuChunks.length; i++) {
+      const chunk = menuChunks[i];
+      const menuNumber = menuChunks.length > 1 ? ` (Menu ${i + 1}/${menuChunks.length})` : '';
+      
+      const selectMenuOptions = chunk.map(gun => ({
+        label: gun.length > 100 ? gun.substring(0, 97) + '...' : gun,
+        value: gun,
+      }));
 
-    const embed = {
-      color: EMBED_COLOR,
-      title: `${options.category} - Custom Guns Menu`,
-      description: `**Available Guns (Multi-Select):**\n${allowedGuns.join(', ')}`,
-      footer: { text: `Total: ${allowedGuns.length} guns | Multi-select enabled` },
-    };
+      const components = [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: `custom_gun_select_${options.category.toLowerCase().replace(/\s+/g, '_')}_${i + 1}`,
+              placeholder: `Select weapon(s) from ${options.category}${menuNumber}`,
+              min_values: 1,
+              max_values: chunk.length,
+              options: selectMenuOptions,
+            },
+          ],
+        },
+      ];
 
-    await interaction.channel.send({
-      embeds: [embed],
-      components,
-    });
+      const embed = {
+        color: EMBED_COLOR,
+        title: `${options.category} - Guns Menu${menuNumber}`,
+        description: `**Available Guns (Multi-Select):**\n${chunk.join(', ')}`,
+        footer: { text: `${chunk.length} guns in this menu | Total: ${allowedGuns.length} guns` },
+      };
+
+      await interaction.channel.send({
+        embeds: [embed],
+        components,
+      });
+    }
 
     const confirmEmbed = {
       color: EMBED_COLOR,
       title: '✅ Custom Guns Menu Created',
-      description: `Category: **${options.category}**\nGuns added: **${allowedGuns.length}**\nMulti-select: **Enabled**`,
+      description: `Category: **${options.category}**\nGuns added: **${allowedGuns.length}**\nMenus created: **${menuChunks.length}**\nMulti-select: **Enabled**`,
     };
 
     return interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
