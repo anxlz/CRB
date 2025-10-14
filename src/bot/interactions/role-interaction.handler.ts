@@ -144,10 +144,11 @@ export class RoleInteractionHandler {
       status: 'weapon_1_selected'
     });
 
-    const combination = `${player.role1}/${player.role2}`;
-    const weapons = getRoleCombinationWeapons(combination);
+    // Get weapons only from role2 for the second weapon selection
+    const { WEAPONS } = require('../../constants/game-data');
+    const role2Weapons = WEAPONS[player.role2] || [];
     
-    const weaponOptions = weapons
+    const weaponOptions = role2Weapons
       .filter(w => w !== weapon)
       .slice(0, 25)
       .map((w) => ({
