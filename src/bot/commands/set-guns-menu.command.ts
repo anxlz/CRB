@@ -3,6 +3,7 @@ import { Context, SlashCommand, SlashCommandContext, Options, StringOption, Auto
 import { AutocompleteInteraction } from 'discord.js';
 import { BotService } from '../bot.service';
 import { EMBED_COLOR } from '../../constants/game-data';
+import { getWeaponListsForCategory, CATEGORY_MAPPING } from '../../constants/weapon-lists';
 
 class SetGunsMenuDto {
   @StringOption({
@@ -13,76 +14,76 @@ class SetGunsMenuDto {
   })
   category: string;
 
-  @StringOption({ name: 'list1', description: 'Comma-separated guns list 1', required: false })
+  @StringOption({ name: 'list1', description: '1st 24 guns for category', required: false, autocomplete: true })
   list1?: string;
 
-  @StringOption({ name: 'list2', description: 'Comma-separated guns list 2', required: false })
+  @StringOption({ name: 'list2', description: '2nd 24 guns for category', required: false, autocomplete: true })
   list2?: string;
 
-  @StringOption({ name: 'list3', description: 'Comma-separated guns list 3', required: false })
+  @StringOption({ name: 'list3', description: '3rd 24 guns for category', required: false, autocomplete: true })
   list3?: string;
 
-  @StringOption({ name: 'list4', description: 'Comma-separated guns list 4', required: false })
+  @StringOption({ name: 'list4', description: '4th 24 guns for category', required: false, autocomplete: true })
   list4?: string;
 
-  @StringOption({ name: 'list5', description: 'Comma-separated guns list 5', required: false })
+  @StringOption({ name: 'list5', description: '5th 24 guns for category', required: false, autocomplete: true })
   list5?: string;
 
-  @StringOption({ name: 'list6', description: 'Comma-separated guns list 6', required: false })
+  @StringOption({ name: 'list6', description: '6th 24 guns for category', required: false, autocomplete: true })
   list6?: string;
 
-  @StringOption({ name: 'list7', description: 'Comma-separated guns list 7', required: false })
+  @StringOption({ name: 'list7', description: '7th 24 guns for category', required: false, autocomplete: true })
   list7?: string;
 
-  @StringOption({ name: 'list8', description: 'Comma-separated guns list 8', required: false })
+  @StringOption({ name: 'list8', description: '8th 24 guns for category', required: false, autocomplete: true })
   list8?: string;
 
-  @StringOption({ name: 'list9', description: 'Comma-separated guns list 9', required: false })
+  @StringOption({ name: 'list9', description: '9th 24 guns for category', required: false, autocomplete: true })
   list9?: string;
 
-  @StringOption({ name: 'list10', description: 'Comma-separated guns list 10', required: false })
+  @StringOption({ name: 'list10', description: '10th 24 guns for category', required: false, autocomplete: true })
   list10?: string;
 
-  @StringOption({ name: 'list11', description: 'Comma-separated guns list 11', required: false })
+  @StringOption({ name: 'list11', description: '11th 24 guns for category', required: false, autocomplete: true })
   list11?: string;
 
-  @StringOption({ name: 'list12', description: 'Comma-separated guns list 12', required: false })
+  @StringOption({ name: 'list12', description: '12th 24 guns for category', required: false, autocomplete: true })
   list12?: string;
 
-  @StringOption({ name: 'list13', description: 'Comma-separated guns list 13', required: false })
+  @StringOption({ name: 'list13', description: '13th 24 guns for category', required: false, autocomplete: true })
   list13?: string;
 
-  @StringOption({ name: 'list14', description: 'Comma-separated guns list 14', required: false })
+  @StringOption({ name: 'list14', description: '14th 24 guns for category', required: false, autocomplete: true })
   list14?: string;
 
-  @StringOption({ name: 'list15', description: 'Comma-separated guns list 15', required: false })
+  @StringOption({ name: 'list15', description: '15th 24 guns for category', required: false, autocomplete: true })
   list15?: string;
 
-  @StringOption({ name: 'list16', description: 'Comma-separated guns list 16', required: false })
+  @StringOption({ name: 'list16', description: '16th 24 guns for category', required: false, autocomplete: true })
   list16?: string;
 
-  @StringOption({ name: 'list17', description: 'Comma-separated guns list 17', required: false })
+  @StringOption({ name: 'list17', description: '17th 24 guns for category', required: false, autocomplete: true })
   list17?: string;
 
-  @StringOption({ name: 'list18', description: 'Comma-separated guns list 18', required: false })
+  @StringOption({ name: 'list18', description: '18th 24 guns for category', required: false, autocomplete: true })
   list18?: string;
 
-  @StringOption({ name: 'list19', description: 'Comma-separated guns list 19', required: false })
+  @StringOption({ name: 'list19', description: '19th 24 guns for category', required: false, autocomplete: true })
   list19?: string;
 
-  @StringOption({ name: 'list20', description: 'Comma-separated guns list 20', required: false })
+  @StringOption({ name: 'list20', description: '20th 24 guns for category', required: false, autocomplete: true })
   list20?: string;
 
-  @StringOption({ name: 'list21', description: 'Comma-separated guns list 21', required: false })
+  @StringOption({ name: 'list21', description: '21st 24 guns for category', required: false, autocomplete: true })
   list21?: string;
 
-  @StringOption({ name: 'list22', description: 'Comma-separated guns list 22', required: false })
+  @StringOption({ name: 'list22', description: '22nd 24 guns for category', required: false, autocomplete: true })
   list22?: string;
 
-  @StringOption({ name: 'list23', description: 'Comma-separated guns list 23', required: false })
+  @StringOption({ name: 'list23', description: '23rd 24 guns for category', required: false, autocomplete: true })
   list23?: string;
 
-  @StringOption({ name: 'list24', description: 'Comma-separated guns list 24', required: false })
+  @StringOption({ name: 'list24', description: '24th 24 guns for category', required: false, autocomplete: true })
   list24?: string;
 }
 
@@ -147,6 +148,27 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
       );
     }
     
+    // Handle list autocomplete
+    if (focused.name.startsWith('list')) {
+      const listNumber = parseInt(focused.name.replace('list', ''));
+      const category = interaction.options.getString('category');
+      
+      if (category) {
+        const weaponLists = getWeaponListsForCategory(category);
+        const listIndex = listNumber - 1;
+        
+        if (weaponLists[listIndex]) {
+          const value = weaponLists[listIndex];
+          const preview = value.length > 100 ? value.substring(0, 97) + '...' : value;
+          
+          return interaction.respond([
+            { name: `${category} - List ${listNumber} (${value.split(', ').length} guns)`, value: value },
+            { name: `Preview: ${preview}`, value: value }
+          ]);
+        }
+      }
+    }
+    
     return interaction.respond([]);
   }
 }
@@ -182,17 +204,18 @@ export class SetGunsMenuCommand {
     ].filter((list): list is string => list !== undefined && list !== null && list.trim().length > 0);
 
     if (lists.length === 0) {
-      // Show help message with pre-configured gun lists
-      const categoryUpper = options.category.toUpperCase();
-      const availableLists = GUN_LISTS[categoryUpper as keyof typeof GUN_LISTS];
+      // Show help message with weapon lists from database
+      const weaponLists = getWeaponListsForCategory(options.category);
       
-      if (availableLists) {
-        const listsInfo = availableLists
-          .map((list, index) => `**list${index + 1}:** ${list.split(',').length} guns`)
+      if (weaponLists.length > 0) {
+        const listsInfo = weaponLists
+          .map((list, index) => `**list${index + 1}:** ${list.split(', ').length} guns`)
           .join('\n');
         
+        const firstListPreview = weaponLists[0].substring(0, 80) + '...';
+        
         return interaction.reply({
-          content: `ℹ️ **Available pre-configured lists for ${options.category}:**\n\n${listsInfo}\n\n**Example usage:**\n\`/setgunsmenu category:${options.category} list1:${availableLists[0].substring(0, 50)}...\`\n\nOr use all lists:\n\`/setgunsmenu category:${options.category} list1:... list2:... list3:...\``,
+          content: `ℹ️ **Available weapon lists for ${options.category}:**\n\n${listsInfo}\n\n**How to use:**\n1. Type \`/setgunsmenu category:${options.category}\`\n2. Start typing in list1, list2, etc. to see autocomplete options\n3. Select the pre-filled gun lists from autocomplete\n\n**Example:** \`list1:${firstListPreview}\``,
           ephemeral: true,
         });
       }

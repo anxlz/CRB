@@ -4,10 +4,17 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 14, 2025 - Latest)
+- **Auto-populated Weapon Lists**: Created weapon database from COD Mobile weapons file with automatic parsing and categorization
+  - Parses 34 Assault Rifles, 29 SMGs, 11 Snipers, 13 LMGs, 10 Shotguns, 7 Marksman Rifles, 9 Pistols
+  - Automatically removes banned weapons (NA-45, SVD, XPR-50, Argus, Shorty) and season info from weapon names
+  - Splits weapons into chunks of 24 per list (e.g., AR has 2 lists: 24 guns + 10 guns)
+- **Enhanced `/setgunsmenu` Autocomplete**: List parameters now show pre-filled weapon options from database
+  - When you select a category, list1/list2/list3 autocomplete shows actual gun lists
+  - Shows gun count and preview for each list (e.g., "AR - List 1 (24 guns)")
+  - No manual typing needed - just select from autocomplete options
 - **Streamlined Role Selection UX**: Replaced Join button with role selection dropdown directly on main setup message - all users can now see and use the dropdown without clicking Join first
 - **Operator Skills Dropdown**: Converted operator skills from buttons to select menu (dropdown) for cleaner UI
 - **Fixed Operator Selection**: Moved interaction reply to end of handler to prevent "This interaction failed" error
-- **Enhanced setgunsmenu Command**: Added autocomplete for category parameter showing available weapon categories (AR, SMG, Marksman, Heavy, etc.)
 - **Bot Streaming Status**: Bot now displays streaming status "COD Mobile Roster" when online
 - **Updated Queue Timestamp Label**: Changed "Last Queue" to "Last Queue Date" across all embeds for clarity
 
@@ -73,7 +80,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/testmode` - Toggle test mode (1 player = 5 players)
 - `/playerprofile` - Display player profile with stats image (defaults to author)
 - `/setemoji` - Configure custom emojis for roles, weapons, operators, tactical, and lethal equipment
-- `/setgunsmenu` - Create custom gun menus with multiple comma-separated gun lists (multi-select enabled, up to 25 guns displayed)
+- `/setgunsmenu` - Create custom gun menus with auto-populated weapon lists from database (multi-select enabled, autocomplete with pre-filled guns)
 
 #### Interactive Flow
 1. **Initial Page**: Displays gun roles publicly (AR 0/3, SMG 0/3, etc.) with role selection dropdown, Leave, Edit buttons and 💡 help button
