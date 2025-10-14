@@ -29,11 +29,30 @@ export class RoleInteractionHandler {
       });
     }
 
-    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    let player = setup.players.find((p) => p.userId === interaction.user.id);
     if (!player) {
-      return interaction.reply({
-        content: 'You are not in this setup!',
-        ephemeral: true,
+      if (setup.players.length >= 5) {
+        return interaction.reply({
+          content: 'The setup is full! Maximum 5 players allowed.',
+          ephemeral: true,
+        });
+      }
+
+      player = {
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        role1: null,
+        role2: null,
+        weapons: [],
+        operatorSkill: null,
+      };
+      setup.players.push(player);
+
+      this.botService.sendLog(guildId, '[PLAYER JOINED]', {
+        channelId,
+        userId: interaction.user.id,
+        username: interaction.user.username,
+        status: 'joined'
       });
     }
 
@@ -268,11 +287,19 @@ export class RoleInteractionHandler {
         type: 1,
         components: [
           {
-            type: 2,
-            style: 1,
-            label: 'Join',
-            custom_id: 'join_setup',
+            type: 3,
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: ROLE_COMBINATIONS.map((combo) => ({
+              label: combo,
+              value: combo,
+            })),
           },
+        ],
+      },
+      {
+        type: 1,
+        components: [
           {
             type: 2,
             style: 4,
@@ -357,15 +384,15 @@ export class RoleInteractionHandler {
           components: [
             {
               type: 2,
-              style: 1,
-              label: 'Join',
-              custom_id: 'join_setup',
-            },
-            {
-              type: 2,
               style: 4,
               label: 'Leave',
               custom_id: 'leave_setup',
+            },
+            {
+              type: 2,
+              style: 2,
+              label: 'Edit',
+              custom_id: 'edit_roles',
             },
           ],
         },
@@ -374,9 +401,9 @@ export class RoleInteractionHandler {
           components: [
             {
               type: 2,
-              style: 2,
-              label: 'Edit',
-              custom_id: 'edit_roles',
+              style: 3,
+              label: '💡',
+              custom_id: 'show_setup_steps',
             },
           ],
         },

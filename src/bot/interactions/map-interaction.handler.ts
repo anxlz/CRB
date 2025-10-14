@@ -47,11 +47,29 @@ export class MapInteractionHandler {
         type: 1,
         components: [
           {
-            type: 2,
-            style: 1,
-            label: 'Join',
-            custom_id: 'join_setup',
+            type: 3,
+            custom_id: 'select_role_combination',
+            placeholder: 'Select Role Combination',
+            options: [
+              { label: 'AR/SMG', value: 'AR/SMG' },
+              { label: 'AR/Marksman', value: 'AR/Marksman' },
+              { label: 'AR/Heavy', value: 'AR/Heavy' },
+              { label: 'SMG/AR', value: 'SMG/AR' },
+              { label: 'SMG/Marksman', value: 'SMG/Marksman' },
+              { label: 'SMG/Heavy', value: 'SMG/Heavy' },
+              { label: 'Marksman/AR', value: 'Marksman/AR' },
+              { label: 'Marksman/SMG', value: 'Marksman/SMG' },
+              { label: 'Marksman/Heavy', value: 'Marksman/Heavy' },
+              { label: 'Heavy/SMG', value: 'Heavy/SMG' },
+              { label: 'Heavy/AR', value: 'Heavy/AR' },
+              { label: 'Heavy/Marksman', value: 'Heavy/Marksman' },
+            ],
           },
+        ],
+      },
+      {
+        type: 1,
+        components: [
           {
             type: 2,
             style: 4,
