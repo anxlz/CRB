@@ -21,12 +21,10 @@ export class RoleInteractionHandler {
     const channelId = interaction.channelId;
     const combination = selected[0];
 
-    const setup = this.botService.getSetup(guildId, channelId);
+    let setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
-      return interaction.reply({
-        content: 'No active setup found!',
-        ephemeral: true,
-      });
+      setup = this.botService.createSetup(guildId, channelId);
+      setup.messageId = interaction.message.id;
     }
 
     let player = setup.players.find((p) => p.userId === interaction.user.id);
