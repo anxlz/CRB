@@ -53,12 +53,6 @@ export class OperatorInteractionHandler {
 
     player.operatorSkill = operatorName;
 
-    const operatorWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', operatorName);
-    await interaction.reply({
-      content: `You selected: **${operatorWithEmoji}**`,
-      ephemeral: true,
-    });
-
     this.botService.updateSetup(guildId, channelId, setup);
 
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
@@ -69,6 +63,12 @@ export class OperatorInteractionHandler {
         await this.updateOperatorEmbed(message, setup);
       }
     }
+
+    const operatorWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', operatorName);
+    await interaction.reply({
+      content: `You selected: **${operatorWithEmoji}**`,
+      ephemeral: true,
+    });
   }
 
   @Button('edit_operators')
