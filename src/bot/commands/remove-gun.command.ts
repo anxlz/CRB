@@ -30,17 +30,20 @@ export class RemoveGunAutocompleteInterceptor extends AutocompleteInterceptor {
 
   public transformOptions(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
-    const categories = ['AR', 'SMG', 'LMG', 'Shotgun', 'Sniper', 'Marksman', 'Pistol', 'Heavy'];
+    const categories = [
+      { name: 'AR', value: 'AR' },
+      { name: 'SMG', value: 'SMG' },
+      { name: 'Heavy', value: 'HEAVY' },
+      { name: 'Marksman', value: 'MARKSMAN' }
+    ];
     
     if (focused.name === 'category') {
       const searchValue = focused.value.toString().toLowerCase();
       const filtered = searchValue === '' 
         ? categories 
-        : categories.filter(cat => cat.toLowerCase().includes(searchValue));
+        : categories.filter(cat => cat.name.toLowerCase().includes(searchValue));
       
-      return interaction.respond(
-        filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
-      );
+      return interaction.respond(filtered.slice(0, 25));
     }
 
     if (focused.name === 'gun_name') {

@@ -7,7 +7,7 @@ import { EMBED_COLOR } from '../../constants/game-data';
 class AddGunDto {
   @StringOption({
     name: 'category',
-    description: 'Gun category (AR, SMG, LMG, Shotgun, Sniper, Marksman, Pistol, Heavy)',
+    description: 'Gun category (AR, SMG, Heavy, Marksman)',
     required: true,
     autocomplete: true,
   })
@@ -25,17 +25,20 @@ class AddGunDto {
 export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
   public transformOptions(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
-    const categories = ['AR', 'SMG', 'LMG', 'Shotgun', 'Sniper', 'Marksman', 'Pistol', 'Heavy'];
+    const categories = [
+      { name: 'AR', value: 'AR' },
+      { name: 'SMG', value: 'SMG' },
+      { name: 'Heavy', value: 'HEAVY' },
+      { name: 'Marksman', value: 'MARKSMAN' }
+    ];
     
     if (focused.name === 'category') {
       const searchValue = focused.value.toString().toLowerCase();
       const filtered = searchValue === '' 
         ? categories 
-        : categories.filter(cat => cat.toLowerCase().includes(searchValue));
+        : categories.filter(cat => cat.name.toLowerCase().includes(searchValue));
       
-      return interaction.respond(
-        filtered.slice(0, 25).map(cat => ({ name: cat, value: cat }))
-      );
+      return interaction.respond(filtered.slice(0, 25));
     }
     
     return interaction.respond([]);
@@ -66,7 +69,7 @@ export class AddGunCommand {
     const userId = interaction.user.id;
     const normalizedCategory = options.category.toUpperCase();
     
-    const validCategories = ['AR', 'SMG', 'LMG', 'SHOTGUN', 'SNIPER', 'MARKSMAN', 'PISTOL', 'HEAVY'];
+    const validCategories = ['AR', 'SMG', 'HEAVY', 'MARKSMAN'];
     if (!validCategories.includes(normalizedCategory)) {
       return interaction.reply({
         content: `❌ Invalid category! Valid categories are: ${validCategories.join(', ')}`,
