@@ -6,6 +6,7 @@ import {
   ROLE_COMBINATIONS,
   parseRoleCombination,
   getRoleCombinationWeapons,
+  WEAPONS,
 } from '../../constants/game-data';
 
 @Injectable()
@@ -77,7 +78,7 @@ export class RoleInteractionHandler {
     setup.rolePool[role2]--;
 
 
-    const weapons = getRoleCombinationWeapons(combination);
+    const weapons = WEAPONS[player.role1] || [];
 
     if (!weapons || weapons.length === 0) {
       return interaction.reply({
