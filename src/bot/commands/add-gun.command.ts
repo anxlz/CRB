@@ -23,7 +23,7 @@ class AddGunDto {
 
 @Injectable()
 export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
-  public transformOptions(interaction: AutocompleteInteraction) {
+  public async transformOptions(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
     const categories = [
       { name: 'AR', value: 'AR' },
@@ -38,11 +38,9 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
         ? categories 
         : categories.filter(cat => cat.name.toLowerCase().includes(searchValue));
       
-      console.log('[ADDGUN AUTOCOMPLETE] Categories:', filtered);
       return interaction.respond(filtered.slice(0, 25));
     }
     
-    console.log('[ADDGUN AUTOCOMPLETE] Not category field:', focused.name);
     return interaction.respond([]);
   }
 }

@@ -43,7 +43,7 @@ export class EditGunAutocompleteInterceptor extends AutocompleteInterceptor {
     super();
   }
 
-  public transformOptions(interaction: AutocompleteInteraction) {
+  public async transformOptions(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
     const categories = [
       { name: 'AR', value: 'AR' },
