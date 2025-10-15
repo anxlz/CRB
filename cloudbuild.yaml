@@ -1,0 +1,29 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/cod-mobile-bot:$SHORT_SHA', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/cod-mobile-bot:$SHORT_SHA']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'cod-mobile-bot'
+      - '--image=gcr.io/$PROJECT_ID/cod-mobile-bot:$SHORT_SHA'
+      - '--platform=managed'
+      - '--region=us-central1'
+      - '--min-instances=1'
+      - '--max-instances=1'
+      - '--port=3000'
+      - '--set-env-vars=NODE_ENV=production'
+      - '--set-secrets=DISCORD_TOKEN=DISCORD_TOKEN:latest,GOOGLE_APPLICATION_CREDENTIALS=GOOGLE_APPLICATION_CREDENTIALS:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/cod-mobile-bot:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
