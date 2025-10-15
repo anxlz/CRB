@@ -3,7 +3,19 @@
 ## Project Overview
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
-## Recent Changes (October 14, 2025 - Latest)
+## Recent Changes (October 15, 2025 - Latest)
+- **Setup Message Persistence**: Bot now edits existing setup messages on restart instead of creating duplicates
+  - Added persistent message ID storage in `data/setup-message-ids.json`
+  - Message IDs loaded on bot startup and used to edit existing messages
+  - Falls back to sending new message if existing message not found
+  - File-based JSON persistence ensures message IDs survive bot restarts
+- **Updated Weapon Lists**: Curated competitive meta weapons for each category
+  - **AR (13 guns)**: Type 19, XM4, Oden, DR-H, HVK-30, Krig 6, BP50, LK24, Grau 5.56, RAM-7, Type 25, Kilo 141, Groza
+  - **SMG (10 guns)**: VMP, USS 9, Fennec, Switchblade X9, CBR4, PDW-57, KSP 45, LAPA, GKS, CX-9
+  - **Heavy (6 guns)**: HS0405, R9-0, KRM-262, PKM, Holger 26, MG 82
+  - **Marksman (2 guns)**: Type 63, SKS
+
+## Recent Changes (October 14, 2025)
 - **New Custom Gun Management System**: Replaced `/setgunsmenu` with three new commands for managing custom guns
   - `/addgun` - Add custom guns to categories with autocomplete (e.g., `/addgun category:AR gun_name:Type 25`)
   - `/editgun` - Edit existing custom guns (rename or change category) with autocomplete for gun selection
@@ -102,6 +114,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 ### Data Structure
 - In-memory storage for active setups, log channels, manager roles, test mode state, and emoji configurations
 - Custom guns stored in `data/custom-guns.json` with guild-scoped isolation (each server has separate gun database)
+- Setup message IDs stored in `data/setup-message-ids.json` for persistent message editing across bot restarts
 - Setup state includes: players, role pool, current page, selections, lastQueueTime, status
 - Real-time validation for role availability and operator uniqueness
 - Logging system sends events to both console and configured Discord channel
@@ -130,7 +143,10 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 
 ## Important Notes
 - **In-Memory State**: Log channel, manager role, test mode settings, and emoji configurations are stored in memory and reset on bot restart
-- **Custom Gun Persistence**: Custom guns are persisted to `data/custom-guns.json` and survive bot restarts (guild-scoped)
+- **Persistent Storage**: 
+  - Custom guns persisted to `data/custom-guns.json` (guild-scoped, survives bot restarts)
+  - Setup message IDs persisted to `data/setup-message-ids.json` (prevents duplicate messages on restart)
+- **Message Management**: Bot edits existing setup messages on restart instead of creating duplicates
 - **Test Mode**: Useful for development - allows 1 player to fill all 5 slots
 - **Manager Role Permissions**: Only users with configured manager role can start new setups (if no role set, all users can)
 - **Timestamp Tracking**: Last Queue Date updates when first player joins empty setup or after completion
@@ -138,6 +154,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - **Custom Emojis**: Configured per-guild using `/setemoji` command, displayed in all select menus and embeds
 - **Bot Status**: Bot displays streaming status "COD Mobile Roster" when online
 - **Guild Isolation**: Custom guns are completely isolated per Discord server (no cross-server data sharing)
+- **Deployment Note**: Ensure deployment environment has write access to `data/` directory for persistence features to work
 
 ## Future Enhancements
 - Persistent storage with database for settings
