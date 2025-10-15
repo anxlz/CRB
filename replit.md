@@ -4,16 +4,19 @@
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
 ## Recent Changes (October 15, 2025 - Latest)
+- **Streamlined Gun Categories**: Simplified weapon categories to 4 core types aligned with competitive meta
+  - **Categories**: AR, SMG, Heavy, Marksman (removed LMG, Shotgun, Sniper, Pistol as separate categories)
+  - **AR (13 guns)**: Type 19, XM4, Oden, DR-H, HVK-30, Krig 6, BP50, LK24, Grau 5.56, RAM-7, Type 25, Kilo 141, Groza
+  - **SMG (10 guns)**: VMP, USS 9, Fennec, Switchblade X9, CBR4, PDW-57, KSP 45, LAPA, GKS, CX-9
+  - **Heavy (6 guns)**: HS0405, R9-0, KRM-262, PKM, Holger 26, MG 82
+  - **Marksman (2 guns)**: Type 63, SKS
+  - Updated `/addgun`, `/editgun`, and `/removegun` commands to use only these 4 categories
+  - Autocomplete now shows user-friendly names (Heavy, Marksman) but submits uppercase values (HEAVY, MARKSMAN) for consistency
 - **Setup Message Persistence**: Bot now edits existing setup messages on restart instead of creating duplicates
   - Added persistent message ID storage in `data/setup-message-ids.json`
   - Message IDs loaded on bot startup and used to edit existing messages
   - Falls back to sending new message if existing message not found
   - File-based JSON persistence ensures message IDs survive bot restarts
-- **Updated Weapon Lists**: Curated competitive meta weapons for each category
-  - **AR (13 guns)**: Type 19, XM4, Oden, DR-H, HVK-30, Krig 6, BP50, LK24, Grau 5.56, RAM-7, Type 25, Kilo 141, Groza
-  - **SMG (10 guns)**: VMP, USS 9, Fennec, Switchblade X9, CBR4, PDW-57, KSP 45, LAPA, GKS, CX-9
-  - **Heavy (6 guns)**: HS0405, R9-0, KRM-262, PKM, Holger 26, MG 82
-  - **Marksman (2 guns)**: Type 63, SKS
 
 ## Recent Changes (October 14, 2025)
 - **New Custom Gun Management System**: Replaced `/setgunsmenu` with three new commands for managing custom guns
