@@ -147,10 +147,11 @@ export class SetupChannelsCommand {
 
     for (const channel of channels) {
       if ('send' in channel && typeof channel.send === 'function') {
-        await channel.send({
+        const sentMessage = await channel.send({
           embeds: [setupChannelEmbed(channel.id)],
           components,
         });
+        this.botService.setSetupMessageId(guildId, channel.id, sentMessage.id);
       }
     }
   }

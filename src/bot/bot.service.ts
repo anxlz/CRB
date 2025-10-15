@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { WeaponClassRole } from '../constants/game-data';
 import { Client, TextChannel, EmbedBuilder } from 'discord.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface PlayerSetup {
   userId: string;
@@ -33,6 +35,38 @@ export class BotService {
   private testMode: boolean = false;
   private client: Client | null = null;
   private customEmojis: Map<string, Map<string, string>> = new Map();
+  private setupMessageIds: Map<string, string> = new Map();
+  private messageIdsFile = path.join(process.cwd(), 'data', 'setup-message-ids.json');
+
+  constructor() {
+    this.loadSetupMessageIds();
+  }
+
+  private loadSetupMessageIds() {
+    try {
+      if (!fs.existsSync(path.dirname(this.messageIdsFile))) {
+        fs.mkdirSync(path.dirname(this.messageIdsFile), { recursive: true });
+      }
+
+      if (fs.existsSync(this.messageIdsFile)) {
+        const data = fs.readFileSync(this.messageIdsFile, 'utf-8');
+        const parsed = JSON.parse(data);
+        this.setupMessageIds = new Map(Object.entries(parsed));
+      }
+    } catch (error) {
+      console.error('Error loading setup message IDs:', error);
+      this.setupMessageIds = new Map();
+    }
+  }
+
+  private saveSetupMessageIds() {
+    try {
+      const obj = Object.fromEntries(this.setupMessageIds);
+      fs.writeFileSync(this.messageIdsFile, JSON.stringify(obj, null, 2));
+    } catch (error) {
+      console.error('Error saving setup message IDs:', error);
+    }
+  }
 
   setClient(client: Client) {
     this.client = client;
@@ -56,6 +90,23 @@ export class BotService {
 
   getSetupChannels(guildId: string): string[] {
     return this.setupChannels.get(guildId) || [];
+  }
+
+  setSetupMessageId(guildId: string, channelId: string, messageId: string) {
+    const setupId = `${guildId}-${channelId}`;
+    this.setupMessageIds.set(setupId, messageId);
+    this.saveSetupMessageIds();
+    
+    const setup = this.getSetup(guildId, channelId);
+    if (setup) {
+      setup.messageId = messageId;
+      this.updateSetup(guildId, channelId, setup);
+    }
+  }
+
+  getSetupMessageId(guildId: string, channelId: string): string | undefined {
+    const setupId = `${guildId}-${channelId}`;
+    return this.setupMessageIds.get(setupId);
   }
 
   createSetup(guildId: string, channelId: string): TeamSetup {

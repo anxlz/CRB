@@ -101,11 +101,31 @@ export class BotUpdate {
             },
           ];
 
-          await channel.send({
+          const messageId = this.botService.getSetupMessageId(guild.id, channelId);
+          
+          if (messageId) {
+            try {
+              const existingMessage = await channel.messages.fetch(messageId).catch(() => null);
+              
+              if (existingMessage) {
+                await existingMessage.edit({
+                  embeds: [setupChannelEmbed],
+                  components,
+                });
+                count++;
+                continue;
+              }
+            } catch (error) {
+              console.log(`Failed to edit message ${messageId}, sending new one`);
+            }
+          }
+
+          const sentMessage = await channel.send({
             embeds: [setupChannelEmbed],
             components,
           });
           
+          this.botService.setSetupMessageId(guild.id, channelId, sentMessage.id);
           count++;
         }
       }
