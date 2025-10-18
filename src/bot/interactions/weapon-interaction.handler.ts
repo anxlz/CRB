@@ -82,7 +82,7 @@ export class WeaponInteractionHandler {
     };
 
     const player = setup.players.find((p) => p.userId === interaction.user.id);
-    const availableWeapons = this.botService.getAvailableWeapons(player);
+    const availableWeapons = this.botService.getAvailableWeapons(player, guildId);
 
     const components = [
       {

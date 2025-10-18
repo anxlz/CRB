@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { WeaponClassRole } from '../constants/game-data';
 import { Client, TextChannel, EmbedBuilder } from 'discord.js';
+import { CustomGunsService } from './custom-guns.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -38,7 +39,7 @@ export class BotService {
   private setupMessageIds: Map<string, string> = new Map();
   private messageIdsFile = path.join(process.cwd(), 'data', 'setup-message-ids.json');
 
-  constructor() {
+  constructor(private readonly customGunsService: CustomGunsService) {
     this.loadSetupMessageIds();
   }
 
@@ -215,15 +216,25 @@ export class BotService {
     return available > 0;
   }
 
-  getAvailableWeapons(player: PlayerSetup): string[] {
+  getAvailableWeapons(player: PlayerSetup, guildId?: string): string[] {
     const weapons: string[] = [];
     if (player.role1) {
       const { WEAPONS } = require('../constants/game-data');
       weapons.push(...WEAPONS[player.role1]);
+      
+      if (guildId) {
+        const customGuns = this.customGunsService.getGunsByCategory(guildId, player.role1);
+        weapons.push(...customGuns.map(g => g.name));
+      }
     }
     if (player.role2) {
       const { WEAPONS } = require('../constants/game-data');
       weapons.push(...WEAPONS[player.role2]);
+      
+      if (guildId) {
+        const customGuns = this.customGunsService.getGunsByCategory(guildId, player.role2);
+        weapons.push(...customGuns.map(g => g.name));
+      }
     }
     return [...new Set(weapons)];
   }
