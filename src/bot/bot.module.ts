@@ -19,6 +19,7 @@ import { CustomGunsService } from './custom-guns.service';
 import { AddGunCommand, CategoryAutocompleteInterceptor as AddGunCategoryInterceptor } from './commands/add-gun.command';
 import { EditGunCommand, EditGunAutocompleteInterceptor } from './commands/edit-gun.command';
 import { RemoveGunCommand, RemoveGunAutocompleteInterceptor } from './commands/remove-gun.command';
+import { RemoveEmojiCommand } from './commands/remove-emoji.command';
 
 @Module({
   providers: [
@@ -33,6 +34,7 @@ import { RemoveGunCommand, RemoveGunAutocompleteInterceptor } from './commands/r
     PlayerProfileCommand,
     SendSetupCommand,
     SetEmojiCommand,
+    RemoveEmojiCommand,
     AddGunCommand,
     AddGunCategoryInterceptor,
     EditGunCommand,

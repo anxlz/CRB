@@ -66,7 +66,7 @@ export const WEAPONS = {
     'HS0405', 'R9-0', 'KRM-262', 'PKM', 'Holger 26', 'MG 82'
   ],
   [WeaponClassRole.MARKSMAN]: [
-    'Type 63', 'SKS'
+    'Type 63', 'SKS', 'LW3-Tundra', 'Locus', 'DL Q33'
   ],
 };
 

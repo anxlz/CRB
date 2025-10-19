@@ -3,13 +3,25 @@
 ## Project Overview
 A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster setups with weapon class roles, operator skills, and equipment selection following official competitive rules.
 
-## Recent Changes (October 15, 2025 - Latest)
+## Recent Changes (October 18, 2025 - Latest)
+- **Fixed Custom Gun Integration**: Custom guns added via `/addgun` now properly appear in weapon selection dropdowns
+  - Integrated `CustomGunsService` into `BotService` weapon lookup
+  - `getAvailableWeapons` now combines default weapons with guild-specific custom guns
+  - Custom guns are properly filtered by player's selected roles
+- **Added `/removeemoji` Command**: Remove custom emojis from items
+  - Works with all categories: role, weapon, operator, lethal, tactical
+  - Shows confirmation with the removed emoji
+  - Complements existing `/setemoji` command
+- **Expanded Marksman Category**: Added 3 competitive sniper rifles
+  - **Marksman (5 guns)**: Type 63, SKS, LW3-Tundra, Locus, DL Q33
+  - Updated both `game-data.ts` and `weapon-lists.ts` for consistency
+
+## Recent Changes (October 15, 2025)
 - **Streamlined Gun Categories**: Simplified weapon categories to 4 core types aligned with competitive meta
   - **Categories**: AR, SMG, Heavy, Marksman (removed LMG, Shotgun, Sniper, Pistol as separate categories)
   - **AR (13 guns)**: Type 19, XM4, Oden, DR-H, HVK-30, Krig 6, BP50, LK24, Grau 5.56, RAM-7, Type 25, Kilo 141, Groza
   - **SMG (10 guns)**: VMP, USS 9, Fennec, Switchblade X9, CBR4, PDW-57, KSP 45, LAPA, GKS, CX-9
   - **Heavy (6 guns)**: HS0405, R9-0, KRM-262, PKM, Holger 26, MG 82
-  - **Marksman (2 guns)**: Type 63, SKS
   - Updated `/addgun`, `/editgun`, and `/removegun` commands to use only these 4 categories
   - Autocomplete now shows user-friendly names (Heavy, Marksman) but submits uppercase values (HEAVY, MARKSMAN) for consistency
 - **Setup Message Persistence**: Bot now edits existing setup messages on restart instead of creating duplicates
@@ -96,6 +108,7 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 - `/testmode` - Toggle test mode (1 player = 5 players)
 - `/playerprofile` - Display player profile with stats image (defaults to author)
 - `/setemoji` - Configure custom emojis for roles, weapons, operators, tactical, and lethal equipment
+- `/removeemoji` - Remove custom emojis from items
 - `/addgun` - Add custom guns to categories with autocomplete (guild-scoped)
 - `/editgun` - Edit existing custom guns (rename or change category) with autocomplete
 - `/removegun` - Remove custom guns from categories with autocomplete
@@ -126,7 +139,8 @@ A NestJS-based Discord bot for managing Call of Duty Mobile tournament roster se
 
 ### Competitive Rules Implementation
 - **Role Pool**: 3 ARs, 3 SMGs, 2 Heavy, 2 Marksman per team
-- **Weapons**: Filtered by assigned roles (competitive meta weapons)
+- **Weapons**: Filtered by assigned roles (competitive meta weapons + custom guns)
+- **Custom Guns**: Guild-specific guns added via `/addgun` appear in weapon selection
 - **Operators**: 9 unique skills, one per player
 - **Equipment**: Tactical limit (3/3 per type), unlimited lethal
 

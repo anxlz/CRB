@@ -5,7 +5,7 @@
 const AR_WEAPONS = ['Type 19', 'XM4', 'Oden', 'DR-H', 'HVK-30', 'Krig 6', 'BP50', 'LK24', 'Grau 5.56', 'RAM-7', 'Type 25', 'Kilo 141', 'Groza'];
 const SMG_WEAPONS = ['VMP', 'USS 9', 'Fennec', 'Switchblade X9', 'CBR4', 'PDW-57', 'KSP 45', 'LAPA', 'GKS', 'CX-9'];
 const HEAVY_WEAPONS = ['HS0405', 'R9-0', 'KRM-262', 'PKM', 'Holger 26', 'MG 82'];
-const MARKSMAN_WEAPONS = ['Type 63', 'SKS'];
+const MARKSMAN_WEAPONS = ['Type 63', 'SKS', 'LW3-Tundra', 'Locus', 'DL Q33'];
 
 // Split weapons into chunks of 24
 function chunkWeapons(weapons: string[], chunkSize: number = 24): string[][] {
