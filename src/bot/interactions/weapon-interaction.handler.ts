@@ -64,21 +64,24 @@ export class WeaponInteractionHandler {
     
     const embed = {
       color: EMBED_COLOR,
-      title: 'Weapon Selection',
+      title: '**Weapon Selection**',
       description:
-        'Select your weapons based on your assigned roles:\n\n' +
+        '**Select your weapons based on your assigned roles:**\n\n' +
         setup.players
           .map((p) => {
             if (p.weapons && p.weapons.length > 0) {
               const weaponsWithEmoji = p.weapons.map(w => this.botService.formatWithEmoji(guildId, 'weapon', w));
-              return `${p.username}: ${weaponsWithEmoji.join(', ')}`;
+              return `**<@${p.userId}>: ${weaponsWithEmoji.join(', ')}**`;
             }
             const role1Emoji = this.botService.formatWithEmoji(guildId, 'role', p.role1);
             const role2Emoji = this.botService.formatWithEmoji(guildId, 'role', p.role2);
-            return `${p.username} (${role1Emoji} / ${role2Emoji})`;
+            return `**<@${p.userId}> (${role1Emoji} / ${role2Emoji})**`;
           })
           .join('\n'),
       footer: { text: 'Select weapons from the dropdown below' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const player = setup.players.find((p) => p.userId === interaction.user.id);
@@ -132,24 +135,27 @@ export class WeaponInteractionHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Operator Skills Selection',
+      title: '**Operator Skills Selection**',
       description:
-        'Each player must select a unique operator skill:\n\n' +
+        '**Each player must select a unique operator skill:**\n\n' +
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `${p.username}: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}`;
+              return `**<@${p.userId}>: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}**`;
             }
-            return `${p.username} - Selecting...`;
+            return `**<@${p.userId}> - Selecting...**`;
           })
           .join('\n') +
-        '\n\nAvailable Operators:\n' +
+        '\n\n**Available Operators:**\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
           const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
-          return taken ? `${opWithEmoji} (${taken.username})` : opWithEmoji;
+          return taken ? `**${opWithEmoji} (<@${taken.userId}>)**` : `**${opWithEmoji}**`;
         }).join('\n'),
       footer: { text: 'Select from the dropdown below - Each must be unique!' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const takenOperators = setup.players
@@ -159,7 +165,7 @@ export class WeaponInteractionHandler {
     const operatorOptions = OPERATOR_SKILLS.map((op) => {
       const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
       const takenPlayer = setup.players.find(p => p.operatorSkill === op);
-      const description = takenOperators.includes(op) ? `Taken by ${takenPlayer?.username}` : undefined;
+      const description = takenOperators.includes(op) ? `Taken by <@${takenPlayer?.userId}>` : undefined;
       
       return {
         label: this.truncateLabel(labelWithEmoji),

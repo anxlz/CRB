@@ -38,23 +38,29 @@ export class ResetSetupCommand {
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Setup Reset',
-      description: 'The roster setup has been reset. You can start a new setup now.',
+      title: '**Setup Reset**',
+      description: '**The roster setup has been reset. You can start a new setup now.**',
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     await interaction.reply({ embeds: [embed] });
     
     const setupChannelEmbed = {
       color: EMBED_COLOR,
-      title: 'COD Mobile Roster Setup',
+      title: '**COD Mobile Roster Setup**',
       description:
         '**Gun Roles:**\n' +
         '**AR** 0/3\n' +
         '**SMG** 0/3\n' +
         '**Marksman** 0/2\n' +
         '**Heavy** 0/2\n\n' +
-        `Last Queue Date: ${queueTime}`,
+        `**Last Queue Date: ${queueTime}**`,
       footer: { text: '5 Players Required' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const components = [

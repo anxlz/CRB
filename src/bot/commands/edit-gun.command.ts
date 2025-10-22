@@ -125,9 +125,12 @@ export class EditGunCommand {
       const targetCategory = options.newCategory ? options.newCategory.toUpperCase() : normalizedCategory;
       const embed = {
         color: EMBED_COLOR,
-        title: '✅ Gun Edited Successfully',
+        title: '**✅ Gun Edited Successfully**',
         description: `**Old Name:** ${options.currentName}\n**New Name:** ${options.newName}\n**Old Category:** ${normalizedCategory}${options.newCategory ? `\n**New Category:** ${targetCategory}` : ''}`,
         timestamp: new Date().toISOString(),
+        image: {
+          url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+        },
       };
 
       return interaction.reply({ embeds: [embed], ephemeral: false });

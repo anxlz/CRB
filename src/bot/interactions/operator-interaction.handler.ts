@@ -90,24 +90,27 @@ export class OperatorInteractionHandler {
     
     const embed = {
       color: EMBED_COLOR,
-      title: 'Operator Skills Selection',
+      title: '**Operator Skills Selection**',
       description:
-        'Each player must select a unique operator skill:\n\n' +
+        '**Each player must select a unique operator skill:**\n\n' +
         setup.players
           .map((p) => {
             if (p.operatorSkill) {
-              return `${p.username}: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}`;
+              return `**<@${p.userId}>: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}**`;
             }
-            return `${p.username} - Selecting...`;
+            return `**<@${p.userId}> - Selecting...**`;
           })
           .join('\n') +
-        '\n\nAvailable Operators:\n' +
+        '\n\n**Available Operators:**\n' +
         OPERATOR_SKILLS.map((op) => {
           const taken = setup.players.find((p) => p.operatorSkill === op);
           const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
-          return taken ? `${opWithEmoji} (${taken.username})` : opWithEmoji;
+          return taken ? `**${opWithEmoji} (<@${taken.userId}>)**` : `**${opWithEmoji}**`;
         }).join('\n'),
       footer: { text: 'Select from the dropdown below - Each must be unique!' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const takenOperators = setup.players
@@ -117,7 +120,7 @@ export class OperatorInteractionHandler {
     const operatorOptions = OPERATOR_SKILLS.map((op) => {
       const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
       const takenPlayer = setup.players.find(p => p.operatorSkill === op);
-      const description = takenOperators.includes(op) ? `Taken by ${takenPlayer?.username}` : undefined;
+      const description = takenOperators.includes(op) ? `Taken by <@${takenPlayer?.userId}>` : undefined;
       
       return {
         label: this.truncateLabel(labelWithEmoji),
@@ -168,28 +171,31 @@ export class OperatorInteractionHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: 'Lethal & Tactical Equipment',
+      title: '**Lethal & Tactical Equipment**',
       description:
-        'Select your equipment:\n\n' +
-        'Lethal: No limit\n' +
-        'Tactical: Max 3 per type\n\n' +
+        '**Select your equipment:**\n\n' +
+        '**Lethal: No limit**\n' +
+        '**Tactical: Max 3 per type**\n\n' +
         setup.players
           .map((p) => {
             const status = [];
             if (p.lethal) status.push(this.botService.formatWithEmoji(guildId, 'lethal', p.lethal));
             if (p.tactical) status.push(this.botService.formatWithEmoji(guildId, 'tactical', p.tactical));
             if (status.length === 2) {
-              return `${p.username}: ${status.join(' | ')}`;
+              return `**<@${p.userId}>: ${status.join(' | ')}**`;
             }
-            return `${p.username} - Selecting...`;
+            return `**<@${p.userId}> - Selecting...**`;
           })
           .join('\n') +
-        '\n\nTactical Limits:\n' +
+        '\n\n**Tactical Limits:**\n' +
         TACTICAL_EQUIPMENT.map((tac) => {
           const count = this.botService.getTacticalCount(setup, tac);
-          return `${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3`;
+          return `**${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3**`;
         }).join('\n'),
       footer: { text: 'Select from the dropdowns below' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => {

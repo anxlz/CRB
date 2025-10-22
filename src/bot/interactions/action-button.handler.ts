@@ -46,23 +46,26 @@ export class ActionButtonHandler {
 
     const embed = {
       color: EMBED_COLOR,
-      title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
+      title: `**Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}**`,
       description:
         setup.players
           .map((p) => {
             if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
-              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2\n─────────────`;
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2**\n─────────────`;
             } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
-              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]} 1/2\n─────────────`;
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]} 1/2**\n─────────────`;
             } else if (p.role1 && p.role2) {
-              return `**${p.role1}/${p.role2}**\n<@${p.userId}> - 0/2\n─────────────`;
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - 0/2**\n─────────────`;
             }
-            return `**Selecting...**\n0/2\n─────────────`;
+            return `**Selecting...**\n**0/2**\n─────────────`;
           })
           .join('\n') + '\n\n' +
         `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-        `Last Queue Date: ${queueTime}`,
+        `**Last Queue Date: ${queueTime}**`,
       footer: { text: 'COD Mobile Roster' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const mainComponents = [
@@ -157,23 +160,26 @@ export class ActionButtonHandler {
 
       const embed = {
         color: EMBED_COLOR,
-        title: `Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}`,
+        title: `**Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}**`,
         description:
           setup.players
             .map((p) => {
               if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
-                return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2\n─────────────`;
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2**\n─────────────`;
               } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
-                return `**${p.role1}/${p.role2}**\n<@${p.userId}> - ${p.weapons[0]} 1/2\n─────────────`;
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]} 1/2**\n─────────────`;
               } else if (p.role1 && p.role2) {
-                return `**${p.role1}/${p.role2}**\n<@${p.userId}> - 0/2\n─────────────`;
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - 0/2**\n─────────────`;
               }
-              return `**Selecting...**\n0/2\n─────────────`;
+              return `**Selecting...**\n**0/2**\n─────────────`;
             })
             .join('\n') + '\n\n' +
           `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-          `Last Queue Date: ${queueTime}`,
+          `**Last Queue Date: ${queueTime}**`,
         footer: { text: 'COD Mobile Roster' },
+        image: {
+          url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+        },
       };
 
       const components = [

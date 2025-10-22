@@ -111,28 +111,31 @@ export class EquipmentInteractionHandler {
     
     const embed = {
       color: EMBED_COLOR,
-      title: 'Lethal & Tactical Equipment',
+      title: '**Lethal & Tactical Equipment**',
       description:
-        'Select your equipment:\n\n' +
-        'Lethal: No limit\n' +
-        'Tactical: Max 3 per type\n\n' +
+        '**Select your equipment:**\n\n' +
+        '**Lethal: No limit**\n' +
+        '**Tactical: Max 3 per type**\n\n' +
         setup.players
           .map((p) => {
             const status = [];
             if (p.lethal) status.push(this.botService.formatWithEmoji(guildId, 'lethal', p.lethal));
             if (p.tactical) status.push(this.botService.formatWithEmoji(guildId, 'tactical', p.tactical));
             if (status.length === 2) {
-              return `${p.username}: ${status.join(' | ')}`;
+              return `**<@${p.userId}>: ${status.join(' | ')}**`;
             }
-            return `${p.username} - Selecting...`;
+            return `**<@${p.userId}> - Selecting...**`;
           })
           .join('\n') +
-        '\n\nTactical Limits:\n' +
+        '\n\n**Tactical Limits:**\n' +
         TACTICAL_EQUIPMENT.map((tac) => {
           const count = this.botService.getTacticalCount(setup, tac);
-          return `${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3`;
+          return `**${this.botService.formatWithEmoji(guildId, 'tactical', tac)}: ${count}/3**`;
         }).join('\n'),
       footer: { text: 'Select from the dropdowns below' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => ({
@@ -211,24 +214,27 @@ export class EquipmentInteractionHandler {
       .map((p, index) => {
         const weapons = p.weapons ? p.weapons.join(', ') : 'None';
         return (
-          `Player ${index + 1}: ${p.username}\n` +
-          `Roles: ${p.role1} / ${p.role2}\n` +
-          `Weapons: ${weapons}\n` +
-          `Operator: ${p.operatorSkill}\n` +
-          `Equipment: ${p.lethal} | ${p.tactical}`
+          `**Player ${index + 1}: <@${p.userId}>**\n` +
+          `**Roles: ${p.role1} / ${p.role2}**\n` +
+          `**Weapons: ${weapons}**\n` +
+          `**Operator: ${p.operatorSkill}**\n` +
+          `**Equipment: ${p.lethal} | ${p.tactical}**`
         );
       })
-      .join('\n\n');
+      .join('\n\n-------------------------\n\n');
 
     const embed = {
       color: EMBED_COLOR,
-      title: '✔️ Roster Setup COMPLETED',
+      title: '**Roster Setup COMPLETED**',
       description:
-        'Your team configuration is complete!\n\n' +
+        '**Your team configuration is complete!**\n\n' +
         playersList +
-        '\n\nSetup Complete - Ready for Tournament!' +
-        `\n\nLast Queue Date: ${queueTime}`,
+        '\n\n**Setup Complete - Ready for Tournament!**' +
+        `\n\n**Last Queue Date: ${queueTime}**`,
       footer: { text: 'COD Mobile Esports' },
+      image: {
+        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
+      },
     };
 
     const components = [
@@ -251,7 +257,7 @@ export class EquipmentInteractionHandler {
       .map((p, index) => {
         const weapons = p.weapons ? p.weapons.join(', ') : 'None';
         return (
-          `Player ${index + 1}: ${p.username}\n` +
+          `Player ${index + 1}: <@${p.userId}>\n` +
           `Roles: ${p.role1} / ${p.role2}\n` +
           `Weapons: ${weapons}\n` +
           `Operator: ${p.operatorSkill}\n` +
