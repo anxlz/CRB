@@ -3,6 +3,9 @@ import { Context, Button, ButtonContext } from 'necord';
 import { BotService } from '../bot.service';
 import { EMBED_COLOR, ROLE_COMBINATIONS } from '../../constants/game-data';
 
+const BANNER_URL =
+  'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63';
+
 @Injectable()
 export class ActionButtonHandler {
   constructor(private readonly botService: BotService) {}
@@ -33,16 +36,16 @@ export class ActionButtonHandler {
 
     this.botService.updateSetup(guildId, channelId, setup);
 
-    const { WeaponClassRole } = require('../../constants/game-data');
-
     const statusEmoji = {
       waiting: '⏳',
       in_progress: '🔄',
       active: '✅',
-      completed: '✔️'
+      completed: '✔️',
     };
 
-    const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+    const queueTime = setup.lastQueueTime
+      ? setup.lastQueueTime.toLocaleString()
+      : new Date().toLocaleString();
 
     const embed = {
       color: EMBED_COLOR,
@@ -59,13 +62,12 @@ export class ActionButtonHandler {
             }
             return `**Selecting...**\n**0/2**\n─────────────`;
           })
-          .join('\n') + '\n\n' +
-        `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-        `**Last Queue Date: ${queueTime}**`,
+          .join('\n') +
+        '\n\n' +
+        this.botService.getRolePoolLines(setup) +
+        `\n\n**Last Queue Date: ${queueTime}**`,
       footer: { text: 'COD Mobile Roster' },
-      image: {
-        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-      },
+      image: { url: BANNER_URL },
     };
 
     const mainComponents = [
@@ -113,7 +115,6 @@ export class ActionButtonHandler {
       },
     ];
 
-    // Update main message to show roster status
     await interaction.update({ embeds: [embed], components: mainComponents });
   }
 
@@ -124,39 +125,30 @@ export class ActionButtonHandler {
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
-      return interaction.reply({
-        content: 'No active setup found!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
     }
 
     const removed = this.botService.removePlayer(setup, interaction.user.id);
     if (!removed) {
-      return interaction.reply({
-        content: 'You are not in this setup!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
     }
 
     this.botService.updateSetup(guildId, channelId, setup);
 
-    await interaction.reply({
-      content: 'You have left the setup.',
-      ephemeral: true,
-    });
+    await interaction.reply({ content: 'You have left the setup.', ephemeral: true });
 
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
     if (message) {
-      const { WeaponClassRole } = require('../../constants/game-data');
-
       const statusEmoji = {
         waiting: '⏳',
         in_progress: '🔄',
         active: '✅',
-        completed: '✔️'
+        completed: '✔️',
       };
 
-      const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+      const queueTime = setup.lastQueueTime
+        ? setup.lastQueueTime.toLocaleString()
+        : new Date().toLocaleString();
 
       const embed = {
         color: EMBED_COLOR,
@@ -173,13 +165,12 @@ export class ActionButtonHandler {
               }
               return `**Selecting...**\n**0/2**\n─────────────`;
             })
-            .join('\n') + '\n\n' +
-          `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-          `**Last Queue Date: ${queueTime}**`,
+            .join('\n') +
+          '\n\n' +
+          this.botService.getRolePoolLines(setup) +
+          `\n\n**Last Queue Date: ${queueTime}**`,
         footer: { text: 'COD Mobile Roster' },
-        image: {
-          url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-        },
+        image: { url: BANNER_URL },
       };
 
       const components = [
@@ -238,18 +229,12 @@ export class ActionButtonHandler {
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
-      return interaction.reply({
-        content: 'No active setup found!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
     }
 
     const player = setup.players.find((p) => p.userId === interaction.user.id);
     if (!player) {
-      return interaction.reply({
-        content: 'You are not in this setup!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
     }
 
     return interaction.reply({
@@ -277,7 +262,7 @@ export class ActionButtonHandler {
   @Button('show_setup_steps')
   public async onShowSetupSteps(@Context() [interaction]: ButtonContext) {
     return interaction.reply({
-      content: 
+      content:
         '**Setup Flow:**\n' +
         '1. Select Weapon Class Roles (2 per player)\n' +
         '2. Choose Weapons (2 per player)\n' +
