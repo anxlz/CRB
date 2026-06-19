@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { WeaponClassRole } from '../constants/game-data';
+import { WeaponClassRole, ROLE_POOL } from '../constants/game-data';
 import { Client, TextChannel, EmbedBuilder } from 'discord.js';
 import { CustomGunsService } from './custom-guns.service';
 import * as fs from 'fs';
@@ -48,7 +48,6 @@ export class BotService {
       if (!fs.existsSync(path.dirname(this.messageIdsFile))) {
         fs.mkdirSync(path.dirname(this.messageIdsFile), { recursive: true });
       }
-
       if (fs.existsSync(this.messageIdsFile)) {
         const data = fs.readFileSync(this.messageIdsFile, 'utf-8');
         const parsed = JSON.parse(data);
@@ -69,6 +68,18 @@ export class BotService {
     }
   }
 
+  /** Build a fresh role pool from the ROLE_POOL constants */
+  private freshRolePool(): Record<WeaponClassRole, number> {
+    return {
+      [WeaponClassRole.SMG]: ROLE_POOL[WeaponClassRole.SMG],
+      [WeaponClassRole.AR]: ROLE_POOL[WeaponClassRole.AR],
+      [WeaponClassRole.SNIPER]: ROLE_POOL[WeaponClassRole.SNIPER],
+      [WeaponClassRole.SHOTGUN]: ROLE_POOL[WeaponClassRole.SHOTGUN],
+      [WeaponClassRole.MARKSMAN]: ROLE_POOL[WeaponClassRole.MARKSMAN],
+      [WeaponClassRole.LMG]: ROLE_POOL[WeaponClassRole.LMG],
+    };
+  }
+
   setClient(client: Client) {
     this.client = client;
   }
@@ -83,10 +94,7 @@ export class BotService {
 
   removeSetupChannel(guildId: string, channelId: string) {
     const channels = this.setupChannels.get(guildId) || [];
-    this.setupChannels.set(
-      guildId,
-      channels.filter((c) => c !== channelId),
-    );
+    this.setupChannels.set(guildId, channels.filter((c) => c !== channelId));
   }
 
   getSetupChannels(guildId: string): string[] {
@@ -97,7 +105,6 @@ export class BotService {
     const setupId = `${guildId}-${channelId}`;
     this.setupMessageIds.set(setupId, messageId);
     this.saveSetupMessageIds();
-    
     const setup = this.getSetup(guildId, channelId);
     if (setup) {
       setup.messageId = messageId;
@@ -106,8 +113,7 @@ export class BotService {
   }
 
   getSetupMessageId(guildId: string, channelId: string): string | undefined {
-    const setupId = `${guildId}-${channelId}`;
-    return this.setupMessageIds.get(setupId);
+    return this.setupMessageIds.get(`${guildId}-${channelId}`);
   }
 
   createSetup(guildId: string, channelId: string): TeamSetup {
@@ -117,12 +123,7 @@ export class BotService {
       channelId,
       currentPage: 'roles',
       players: [],
-      rolePool: {
-        [WeaponClassRole.AR]: 3,
-        [WeaponClassRole.SMG]: 3,
-        [WeaponClassRole.HEAVY]: 2,
-        [WeaponClassRole.MARKSMAN]: 2,
-      },
+      rolePool: this.freshRolePool(),
       lastQueueTime: new Date(),
       status: 'waiting',
     };
@@ -151,32 +152,28 @@ export class BotService {
     const maxPlayers = this.testMode ? 1 : 5;
     if (setup.players.length >= maxPlayers) return false;
     if (setup.players.some((p) => p.userId === userId)) return false;
-    
     if (setup.players.length === 0 || setup.status === 'completed') {
       setup.lastQueueTime = new Date();
     }
-    
     setup.players.push({ userId, username });
-    
     setup.status = setup.players.length === maxPlayers ? 'active' : 'in_progress';
-    
     return true;
   }
 
   removePlayer(setup: TeamSetup, userId: string): boolean {
     const index = setup.players.findIndex((p) => p.userId === userId);
     if (index === -1) return false;
-    
     const player = setup.players[index];
     if (player.role1) setup.rolePool[player.role1]++;
     if (player.role2) setup.rolePool[player.role2]++;
-    
     setup.players.splice(index, 1);
-    
     const maxPlayers = this.testMode ? 1 : 5;
-    setup.status = setup.players.length === 0 ? 'waiting' : 
-                   setup.players.length === maxPlayers ? 'active' : 'in_progress';
-    
+    setup.status =
+      setup.players.length === 0
+        ? 'waiting'
+        : setup.players.length === maxPlayers
+        ? 'active'
+        : 'in_progress';
     return true;
   }
 
@@ -188,16 +185,13 @@ export class BotService {
   ): boolean {
     const player = setup.players.find((p) => p.userId === userId);
     if (!player) return false;
-
     if (player.role1) setup.rolePool[player.role1]++;
     if (player.role2) setup.rolePool[player.role2]++;
-
     if (setup.rolePool[role1] <= 0 || setup.rolePool[role2] <= 0) {
       if (player.role1) setup.rolePool[player.role1]--;
       if (player.role2) setup.rolePool[player.role2]--;
       return false;
     }
-
     player.role1 = role1;
     player.role2 = role2;
     setup.rolePool[role1]--;
@@ -208,11 +202,9 @@ export class BotService {
   canSelectRole(setup: TeamSetup, userId: string, role: WeaponClassRole): boolean {
     const player = setup.players.find((p) => p.userId === userId);
     if (!player) return false;
-
     let available = setup.rolePool[role];
     if (player.role1 === role) available++;
     if (player.role2 === role) available++;
-    
     return available > 0;
   }
 
@@ -221,19 +213,17 @@ export class BotService {
     if (player.role1) {
       const { WEAPONS } = require('../constants/game-data');
       weapons.push(...WEAPONS[player.role1]);
-      
       if (guildId) {
         const customGuns = this.customGunsService.getGunsByCategory(guildId, player.role1);
-        weapons.push(...customGuns.map(g => g.name));
+        weapons.push(...customGuns.map((g) => g.name));
       }
     }
     if (player.role2) {
       const { WEAPONS } = require('../constants/game-data');
       weapons.push(...WEAPONS[player.role2]);
-      
       if (guildId) {
         const customGuns = this.customGunsService.getGunsByCategory(guildId, player.role2);
-        weapons.push(...customGuns.map(g => g.name));
+        weapons.push(...customGuns.map((g) => g.name));
       }
     }
     return [...new Set(weapons)];
@@ -242,7 +232,6 @@ export class BotService {
   allPlayersReady(setup: TeamSetup, page: string): boolean {
     const requiredPlayers = this.testMode ? 1 : 5;
     if (setup.players.length !== requiredPlayers) return false;
-    
     let isReady = false;
     switch (page) {
       case 'roles':
@@ -265,51 +254,47 @@ export class BotService {
     }
     return isReady;
   }
-  
+
   setLogChannel(guildId: string, channelId: string) {
     this.logChannels.set(guildId, channelId);
   }
-  
+
   getLogChannel(guildId: string): string | undefined {
     return this.logChannels.get(guildId);
   }
-  
+
   setManagerRole(guildId: string, roleId: string) {
     this.managerRoles.set(guildId, roleId);
   }
-  
+
   getManagerRole(guildId: string): string | undefined {
     return this.managerRoles.get(guildId);
   }
-  
+
   setTestMode(enabled: boolean) {
     this.testMode = enabled;
     console.log('[TEST MODE]', enabled ? 'ENABLED' : 'DISABLED');
   }
-  
+
   isTestMode(): boolean {
     return this.testMode;
   }
 
   async sendLog(guildId: string, message: string, data?: any) {
     console.log(message, data || '');
-    
     const logChannelId = this.logChannels.get(guildId);
     if (!logChannelId || !this.client) return;
-
     try {
       const channel = await this.client.channels.fetch(logChannelId);
       if (channel && channel.isTextBased()) {
         const textChannel = channel as TextChannel;
-        
         const embed = {
-          color: 0x8943F9,
-          description: data 
+          color: 0x8943f9,
+          description: data
             ? `${message}\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``
             : message,
           timestamp: new Date().toISOString(),
         };
-        
         await textChannel.send({ embeds: [embed] });
       }
     } catch (error) {
@@ -331,14 +316,11 @@ export class BotService {
     if (!this.customEmojis.has(guildId)) {
       this.customEmojis.set(guildId, new Map());
     }
-    const guildEmojis = this.customEmojis.get(guildId)!;
-    guildEmojis.set(`${category}:${item}`, emoji);
+    this.customEmojis.get(guildId)!.set(`${category}:${item}`, emoji);
   }
 
   getCustomEmoji(guildId: string, category: string, item: string): string | undefined {
-    const guildEmojis = this.customEmojis.get(guildId);
-    if (!guildEmojis) return undefined;
-    return guildEmojis.get(`${category}:${item}`);
+    return this.customEmojis.get(guildId)?.get(`${category}:${item}`);
   }
 
   getAllCustomEmojis(guildId: string): Map<string, string> | undefined {
@@ -346,13 +328,26 @@ export class BotService {
   }
 
   removeCustomEmoji(guildId: string, category: string, item: string) {
-    const guildEmojis = this.customEmojis.get(guildId);
-    if (!guildEmojis) return;
-    guildEmojis.delete(`${category}:${item}`);
+    this.customEmojis.get(guildId)?.delete(`${category}:${item}`);
   }
 
   formatWithEmoji(guildId: string, category: string, item: string): string {
     const emoji = this.getCustomEmoji(guildId, category, item);
     return emoji ? `${emoji} ${item}` : item;
+  }
+
+  /** Returns the role pool status lines for embed descriptions */
+  getRolePoolLines(setup: TeamSetup): string {
+    const p = setup.rolePool;
+    const used = (role: WeaponClassRole, max: number) =>
+      `**${max - p[role]}/${max} ${role}**`;
+    return [
+      used(WeaponClassRole.SMG, 3),
+      used(WeaponClassRole.AR, 3),
+      used(WeaponClassRole.SNIPER, 1),
+      used(WeaponClassRole.SHOTGUN, 1),
+      used(WeaponClassRole.MARKSMAN, 1),
+      used(WeaponClassRole.LMG, 1),
+    ].join('\n');
   }
 }
