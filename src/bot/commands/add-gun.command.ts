@@ -7,7 +7,7 @@ import { EMBED_COLOR } from '../../constants/game-data';
 class AddGunDto {
   @StringOption({
     name: 'category',
-    description: 'Gun category (AR, SMG, Heavy, Marksman)',
+    description: 'Gun category (AR, SMG, LMG, Shotgun, Marksman, Sniper)',
     required: true,
     autocomplete: true,
   })
@@ -28,8 +28,10 @@ export class CategoryAutocompleteInterceptor extends AutocompleteInterceptor {
     const categories = [
       { name: 'AR', value: 'AR' },
       { name: 'SMG', value: 'SMG' },
-      { name: 'Heavy', value: 'HEAVY' },
-      { name: 'Marksman', value: 'MARKSMAN' }
+      { name: 'LMG', value: 'LMG' },
+      { name: 'Shotgun', value: 'SHOTGUN' },
+      { name: 'Marksman', value: 'MARKSMAN' },
+      { name: 'Sniper', value: 'SNIPER' }
     ];
     
     if (focused.name === 'category') {
@@ -69,7 +71,7 @@ export class AddGunCommand {
     const userId = interaction.user.id;
     const normalizedCategory = options.category.toUpperCase();
     
-    const validCategories = ['AR', 'SMG', 'HEAVY', 'MARKSMAN'];
+    const validCategories = ['AR', 'SMG', 'LMG', 'SHOTGUN', 'MARKSMAN', 'SNIPER'];
     if (!validCategories.includes(normalizedCategory)) {
       return interaction.reply({
         content: `❌ Invalid category! Valid categories are: ${validCategories.join(', ')}`,
