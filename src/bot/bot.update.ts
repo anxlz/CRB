@@ -4,6 +4,9 @@ import { Client } from 'discord.js';
 import { BotService } from './bot.service';
 import { EMBED_COLOR, ROLE_COMBINATIONS } from '../constants/game-data';
 
+const BANNER_URL =
+  'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63';
+
 @Injectable()
 export class BotUpdate {
   constructor(private readonly botService: BotService) {}
@@ -11,52 +14,53 @@ export class BotUpdate {
   @Once('clientReady')
   public async onReady(@Context() [client]: [Client]) {
     console.log(`Bot logged in as ${client.user?.tag}`);
-    
-    // Set bot status to streaming
+
     client.user?.setPresence({
-      activities: [{
-        name: 'COD Mobile Roster',
-        type: 1, // 1 = Streaming
-        url: 'https://twitch.tv/codmobile'
-      }],
-      status: 'online'
+      activities: [
+        {
+          name: 'COD Mobile Roster',
+          type: 1, // Streaming
+          url: 'https://twitch.tv/codmobile',
+        },
+      ],
+      status: 'online',
     });
-    
+
     this.botService.setClient(client);
-    
+
     const setupChannels = await this.sendSetupMessages(client);
     console.log(`Sent setup messages to ${setupChannels} channels`);
   }
 
   private async sendSetupMessages(client: Client): Promise<number> {
     let count = 0;
-    
+
     for (const guild of client.guilds.cache.values()) {
       const channels = this.botService.getSetupChannels(guild.id);
-      
+
       for (const channelId of channels) {
         const channel = await guild.channels.fetch(channelId).catch(() => null);
-        
+
         if (channel && channel.isTextBased()) {
           const existingSetup = this.botService.getSetup(guild.id, channelId);
-          const queueTime = existingSetup?.lastQueueTime 
-            ? existingSetup.lastQueueTime.toLocaleString() 
+          const queueTime = existingSetup?.lastQueueTime
+            ? existingSetup.lastQueueTime.toLocaleString()
             : new Date().toLocaleString();
-          
+
           const setupChannelEmbed = {
             color: EMBED_COLOR,
             title: '**COD Mobile Roster Setup**',
             description:
               '**Gun Roles:**\n' +
-              '**AR** 0/3\n' +
-              '**SMG** 0/3\n' +
-              '**Marksman** 0/2\n' +
-              '**Heavy** 0/2\n\n' +
+              '**0/3 SMG**\n' +
+              '**0/3 AR**\n' +
+              '**0/1 Sniper**\n' +
+              '**0/1 Shotgun**\n' +
+              '**0/1 Marksman**\n' +
+              '**0/1 LMG**\n\n' +
               `**Last Queue Date: ${queueTime}**`,
             footer: { text: '5 Players Required' },
-            image: {
-              url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-            },
+            image: { url: BANNER_URL },
           };
 
           const components = [
@@ -105,16 +109,14 @@ export class BotUpdate {
           ];
 
           const messageId = this.botService.getSetupMessageId(guild.id, channelId);
-          
+
           if (messageId) {
             try {
-              const existingMessage = await channel.messages.fetch(messageId).catch(() => null);
-              
+              const existingMessage = await channel.messages
+                .fetch(messageId)
+                .catch(() => null);
               if (existingMessage) {
-                await existingMessage.edit({
-                  embeds: [setupChannelEmbed],
-                  components,
-                });
+                await existingMessage.edit({ embeds: [setupChannelEmbed], components });
                 count++;
                 continue;
               }
@@ -127,13 +129,13 @@ export class BotUpdate {
             embeds: [setupChannelEmbed],
             components,
           });
-          
+
           this.botService.setSetupMessageId(guild.id, channelId, sentMessage.id);
           count++;
         }
       }
     }
-    
+
     return count;
   }
 }
