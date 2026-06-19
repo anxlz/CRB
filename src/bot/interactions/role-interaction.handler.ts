@@ -5,15 +5,17 @@ import {
   EMBED_COLOR,
   ROLE_COMBINATIONS,
   parseRoleCombination,
-  getRoleCombinationWeapons,
   WEAPONS,
+  OPERATOR_SKILLS,
 } from '../../constants/game-data';
+
+const BANNER_URL =
+  'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63';
 
 @Injectable()
 export class RoleInteractionHandler {
   constructor(private readonly botService: BotService) {}
 
-  // Helper to truncate labels to Discord's 100-char limit
   private truncateLabel(label: string, maxLength: number = 100): string {
     if (label.length <= maxLength) return label;
     return label.substring(0, maxLength - 3) + '...';
@@ -42,7 +44,6 @@ export class RoleInteractionHandler {
           ephemeral: true,
         });
       }
-
       player = {
         userId: interaction.user.id,
         username: interaction.user.username,
@@ -52,7 +53,6 @@ export class RoleInteractionHandler {
         operatorSkill: null,
       };
       setup.players.push(player);
-
     }
 
     const { role1, role2 } = parseRoleCombination(combination);
@@ -63,23 +63,19 @@ export class RoleInteractionHandler {
     if (setup.rolePool[role1] <= 0 || setup.rolePool[role2] <= 0) {
       if (player.role1) setup.rolePool[player.role1]--;
       if (player.role2) setup.rolePool[player.role2]--;
-      
       this.botService.updateSetup(guildId, channelId, setup);
-      
       return interaction.reply({
         content: `The role pool for this combination is full!`,
         ephemeral: true,
       });
     }
-    
+
     player.role1 = role1;
     player.role2 = role2;
     setup.rolePool[role1]--;
     setup.rolePool[role2]--;
 
-
     const weapons = WEAPONS[player.role1] || [];
-
     if (!weapons || weapons.length === 0) {
       return interaction.reply({
         content: 'No weapons available for this role combination!',
@@ -87,15 +83,10 @@ export class RoleInteractionHandler {
       });
     }
 
-    const weaponOptions = weapons
-      .slice(0, 25)
-      .map((weapon) => {
-        const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
-        return {
-          label: this.truncateLabel(labelWithEmoji),
-          value: weapon,
-        };
-      });
+    const weaponOptions = weapons.slice(0, 25).map((weapon) => {
+      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
+      return { label: this.truncateLabel(labelWithEmoji), value: weapon };
+    });
 
     const components = [
       {
@@ -118,7 +109,6 @@ export class RoleInteractionHandler {
     });
 
     this.botService.updateSetup(guildId, channelId, setup);
-
     await this.updateRoleEmbed(interaction, setup);
   }
 
@@ -133,35 +123,25 @@ export class RoleInteractionHandler {
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
-      return interaction.reply({
-        content: 'No active setup found!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
     }
 
     const player = setup.players.find((p) => p.userId === interaction.user.id);
     if (!player) {
-      return interaction.reply({
-        content: 'You are not in this setup!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
     }
 
     player.weapons = [weapon];
 
-    // Get weapons only from role2 for the second weapon selection
-    const { WEAPONS } = require('../../constants/game-data');
-    const role2Weapons = WEAPONS[player.role2] || [];
-    
+    const { WEAPONS: W } = require('../../constants/game-data');
+    const role2Weapons: string[] = W[player.role2] || [];
+
     const weaponOptions = role2Weapons
-      .filter(w => w !== weapon)
+      .filter((w) => w !== weapon)
       .slice(0, 25)
       .map((w) => {
         const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', w);
-        return {
-          label: this.truncateLabel(labelWithEmoji),
-          value: w,
-        };
+        return { label: this.truncateLabel(labelWithEmoji), value: w };
       });
 
     const components = [
@@ -198,10 +178,7 @@ export class RoleInteractionHandler {
 
     const setup = this.botService.getSetup(guildId, channelId);
     if (!setup) {
-      return interaction.reply({
-        content: 'No active setup found!',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
     }
 
     const player = setup.players.find((p) => p.userId === interaction.user.id);
@@ -231,16 +208,10 @@ export class RoleInteractionHandler {
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
     if (!message) return;
 
-    const { WeaponClassRole } = require('../../constants/game-data');
-
-    const statusEmoji = {
-      waiting: '⏳',
-      in_progress: '🔄',
-      active: '✅',
-      completed: '✔️'
-    };
-
-    const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+    const statusEmoji = { waiting: '⏳', in_progress: '🔄', active: '✅', completed: '✔️' };
+    const queueTime = setup.lastQueueTime
+      ? setup.lastQueueTime.toLocaleString()
+      : new Date().toLocaleString();
 
     const embed = {
       color: EMBED_COLOR,
@@ -257,13 +228,12 @@ export class RoleInteractionHandler {
             }
             return `**Selecting...**\n**0/2**\n─────────────`;
           })
-          .join('\n') + '\n\n' +
-        `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-        `**Last Queue Date: ${queueTime}**`,
+          .join('\n') +
+        '\n\n' +
+        this.botService.getRolePoolLines(setup) +
+        `\n\n**Last Queue Date: ${queueTime}**`,
       footer: { text: 'COD Mobile Roster' },
-      image: {
-        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-      },
+      image: { url: BANNER_URL },
     };
 
     const components = [
@@ -274,40 +244,20 @@ export class RoleInteractionHandler {
             type: 3,
             custom_id: 'select_role_combination',
             placeholder: 'Select Role Combination',
-            options: ROLE_COMBINATIONS.map((combo) => ({
-              label: combo,
-              value: combo,
-            })),
+            options: ROLE_COMBINATIONS.map((combo) => ({ label: combo, value: combo })),
           },
         ],
       },
       {
         type: 1,
         components: [
-          {
-            type: 2,
-            style: 4,
-            label: 'Leave',
-            custom_id: 'leave_setup',
-          },
-          {
-            type: 2,
-            style: 2,
-            label: 'Edit',
-            custom_id: 'edit_roles',
-          },
+          { type: 2, style: 4, label: 'Leave', custom_id: 'leave_setup' },
+          { type: 2, style: 2, label: 'Edit', custom_id: 'edit_roles' },
         ],
       },
       {
         type: 1,
-        components: [
-          {
-            type: 2,
-            style: 3,
-            label: '💡',
-            custom_id: 'show_setup_steps',
-          },
-        ],
+        components: [{ type: 2, style: 3, label: '💡', custom_id: 'show_setup_steps' }],
       },
     ];
 
@@ -316,16 +266,10 @@ export class RoleInteractionHandler {
 
   private async checkAndMoveToOperators(message: any, setup: any) {
     if (!this.botService.allPlayersReady(setup, 'weapons')) {
-      const { WeaponClassRole } = require('../../constants/game-data');
-
-      const statusEmoji = {
-        waiting: '⏳',
-        in_progress: '🔄',
-        active: '✅',
-        completed: '✔️'
-      };
-
-      const queueTime = setup.lastQueueTime ? setup.lastQueueTime.toLocaleString() : new Date().toLocaleString();
+      const statusEmoji = { waiting: '⏳', in_progress: '🔄', active: '✅', completed: '✔️' };
+      const queueTime = setup.lastQueueTime
+        ? setup.lastQueueTime.toLocaleString()
+        : new Date().toLocaleString();
 
       const embed = {
         color: EMBED_COLOR,
@@ -342,13 +286,12 @@ export class RoleInteractionHandler {
               }
               return `**Selecting...**\n**0/2**`;
             })
-            .join('\n') + '\n\n' +
-          `**AR** ${3 - setup.rolePool[WeaponClassRole.AR]}/3\n**SMG** ${3 - setup.rolePool[WeaponClassRole.SMG]}/3\n**Marksman** ${2 - setup.rolePool[WeaponClassRole.MARKSMAN]}/2\n**Heavy** ${2 - setup.rolePool[WeaponClassRole.HEAVY]}/2\n\n` +
-          `**Last Queue Date: ${queueTime}**`,
+            .join('\n') +
+          '\n\n' +
+          this.botService.getRolePoolLines(setup) +
+          `\n\n**Last Queue Date: ${queueTime}**`,
         footer: { text: 'COD Mobile Roster' },
-        image: {
-          url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-        },
+        image: { url: BANNER_URL },
       };
 
       const roleComponents = [
@@ -359,40 +302,20 @@ export class RoleInteractionHandler {
               type: 3,
               custom_id: 'select_role_combination',
               placeholder: 'Select Role Combination',
-              options: ROLE_COMBINATIONS.map((combo) => ({
-                label: combo,
-                value: combo,
-              })),
+              options: ROLE_COMBINATIONS.map((combo) => ({ label: combo, value: combo })),
             },
           ],
         },
         {
           type: 1,
           components: [
-            {
-              type: 2,
-              style: 4,
-              label: 'Leave',
-              custom_id: 'leave_setup',
-            },
-            {
-              type: 2,
-              style: 2,
-              label: 'Edit',
-              custom_id: 'edit_roles',
-            },
+            { type: 2, style: 4, label: 'Leave', custom_id: 'leave_setup' },
+            { type: 2, style: 2, label: 'Edit', custom_id: 'edit_roles' },
           ],
         },
         {
           type: 1,
-          components: [
-            {
-              type: 2,
-              style: 3,
-              label: '💡',
-              custom_id: 'show_setup_steps',
-            },
-          ],
+          components: [{ type: 2, style: 3, label: '💡', custom_id: 'show_setup_steps' }],
         },
       ];
 
@@ -401,11 +324,8 @@ export class RoleInteractionHandler {
     }
 
     setup.currentPage = 'operators';
-
-    const { OPERATOR_SKILLS } = require('../../constants/game-data');
-
     const guildId = setup.guildId;
-    
+
     const embed = {
       color: EMBED_COLOR,
       title: '**Operator Skills Selection**',
@@ -426,20 +346,16 @@ export class RoleInteractionHandler {
           return taken ? `**${opWithEmoji} (<@${taken.userId}>)**` : `**${opWithEmoji}**`;
         }).join('\n'),
       footer: { text: 'Select from the dropdown below - Each must be unique!' },
-      image: {
-        url: 'https://media.discordapp.net/attachments/1413190110694084789/1430281339231277066/bwDlFcd.png?ex=68f9dd8c&is=68f88c0c&hm=07f8d5ab727cce9b9122a8a17ecbc9dd53425a229cb9f666ad05dd112221194d&=&format=png&quality=lossless&width=400&height=63'
-      },
+      image: { url: BANNER_URL },
     };
 
-    const takenOperators = setup.players
-      .filter((p) => p.operatorSkill)
-      .map((p) => p.operatorSkill);
-
+    const takenOperators = setup.players.filter((p) => p.operatorSkill).map((p) => p.operatorSkill);
     const operatorOptions = OPERATOR_SKILLS.map((op) => {
       const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
-      const takenPlayer = setup.players.find(p => p.operatorSkill === op);
-      const description = takenOperators.includes(op) ? `Taken by <@${takenPlayer?.userId}>` : undefined;
-      
+      const takenPlayer = setup.players.find((p) => p.operatorSkill === op);
+      const description = takenOperators.includes(op)
+        ? `Taken by <@${takenPlayer?.userId}>`
+        : undefined;
       return {
         label: this.truncateLabel(labelWithEmoji),
         value: op,
@@ -457,25 +373,18 @@ export class RoleInteractionHandler {
             placeholder: 'Select Operator Skill',
             min_values: 1,
             max_values: 1,
-            options: operatorOptions.length > 0 ? operatorOptions : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
+            options:
+              operatorOptions.length > 0
+                ? operatorOptions
+                : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
           },
         ],
       },
       {
         type: 1,
         components: [
-          {
-            type: 2,
-            style: 2,
-            label: 'Edit',
-            custom_id: 'edit_operators',
-          },
-          {
-            type: 2,
-            style: 4,
-            label: 'Leave',
-            custom_id: 'leave_setup',
-          },
+          { type: 2, style: 2, label: 'Edit', custom_id: 'edit_operators' },
+          { type: 2, style: 4, label: 'Leave', custom_id: 'leave_setup' },
         ],
       },
     ];
