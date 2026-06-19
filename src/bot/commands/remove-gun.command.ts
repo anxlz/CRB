@@ -33,8 +33,10 @@ export class RemoveGunAutocompleteInterceptor extends AutocompleteInterceptor {
     const categories = [
       { name: 'AR', value: 'AR' },
       { name: 'SMG', value: 'SMG' },
-      { name: 'Heavy', value: 'HEAVY' },
-      { name: 'Marksman', value: 'MARKSMAN' }
+      { name: 'LMG', value: 'LMG' },
+      { name: 'Shotgun', value: 'SHOTGUN' },
+      { name: 'Marksman', value: 'MARKSMAN' },
+      { name: 'Sniper', value: 'SNIPER' }
     ];
     
     if (focused.name === 'category') {
