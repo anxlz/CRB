@@ -7,6 +7,8 @@ import {
   parseRoleCombination,
   WEAPONS,
   OPERATOR_SKILLS,
+  LETHAL_EQUIPMENT,
+  TACTICAL_EQUIPMENT,
 } from '../../constants/game-data';
 
 const BANNER_URL =
@@ -20,6 +22,8 @@ export class RoleInteractionHandler {
     if (label.length <= maxLength) return label;
     return label.substring(0, maxLength - 3) + '...';
   }
+
+  // ─── Step 1: Player selects role combination ────────────────────────────────
 
   @StringSelect('select_role_combination')
   public async onSelectRoleCombination(
@@ -38,7 +42,8 @@ export class RoleInteractionHandler {
 
     let player = setup.players.find((p) => p.userId === interaction.user.id);
     if (!player) {
-      if (setup.players.length >= 5) {
+      const maxPlayers = this.botService.isTestMode() ? 1 : 5;
+      if (setup.players.length >= maxPlayers) {
         return interaction.reply({
           content: 'The setup is full! Maximum 5 players allowed.',
           ephemeral: true,
@@ -57,6 +62,7 @@ export class RoleInteractionHandler {
 
     const { role1, role2 } = parseRoleCombination(combination);
 
+    // Return old roles to the pool before assigning new ones
     if (player.role1) setup.rolePool[player.role1]++;
     if (player.role2) setup.rolePool[player.role2]++;
 
@@ -70,47 +76,53 @@ export class RoleInteractionHandler {
       });
     }
 
+    // Reset all prior selections when re-picking roles
+    player.weapons = [];
+    player.operatorSkill = null;
+    player.lethal = null;
+    player.tactical = null;
+
     player.role1 = role1;
     player.role2 = role2;
     setup.rolePool[role1]--;
     setup.rolePool[role2]--;
 
-    const weapons = WEAPONS[player.role1] || [];
-    if (!weapons || weapons.length === 0) {
+    const role1Weapons = WEAPONS[player.role1] || [];
+    if (role1Weapons.length === 0) {
       return interaction.reply({
         content: 'No weapons available for this role combination!',
         ephemeral: true,
       });
     }
 
-    const weaponOptions = weapons.slice(0, 25).map((weapon) => {
-      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
-      return { label: this.truncateLabel(labelWithEmoji), value: weapon };
+    const weaponOptions = role1Weapons.slice(0, 25).map((weapon) => {
+      const label = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
+      return { label: this.truncateLabel(label), value: weapon };
     });
 
-    const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_weapon_from_combination',
-            placeholder: `Select 1st Weapon (${player.role1})`,
-            options: weaponOptions,
-          },
-        ],
-      },
-    ];
-
     await interaction.reply({
-      content: `You selected **${combination}**. Now choose your 1st weapon (${player.role1}):`,
-      components,
+      content: `You selected **${combination}**. Now choose your **1st weapon** (${player.role1}):`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_weapon_from_combination',
+              placeholder: `Select 1st Weapon (${player.role1})`,
+              options: weaponOptions,
+            },
+          ],
+        },
+      ],
       ephemeral: true,
     });
 
     this.botService.updateSetup(guildId, channelId, setup);
-    await this.updateRoleEmbed(interaction, setup);
+    await this.updateMainEmbed(interaction, setup);
   }
+
+  // ─── Step 2: Player picks 1st weapon ────────────────────────────────────────
 
   @StringSelect('select_weapon_from_combination')
   public async onSelectWeaponFromCombination(
@@ -132,40 +144,38 @@ export class RoleInteractionHandler {
     }
 
     player.weapons = [weapon];
+    this.botService.updateSetup(guildId, channelId, setup);
 
-    const { WEAPONS: W } = require('../../constants/game-data');
-    const role2Weapons: string[] = W[player.role2] || [];
-
+    const role2Weapons: string[] = WEAPONS[player.role2] || [];
     const weaponOptions = role2Weapons
       .filter((w) => w !== weapon)
       .slice(0, 25)
       .map((w) => {
-        const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', w);
-        return { label: this.truncateLabel(labelWithEmoji), value: w };
+        const label = this.botService.formatWithEmoji(guildId, 'weapon', w);
+        return { label: this.truncateLabel(label), value: w };
       });
 
-    const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_second_weapon',
-            placeholder: `Select 2nd Weapon (${player.role2})`,
-            options: weaponOptions,
-          },
-        ],
-      },
-    ];
+    const weapon1Label = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
 
-    const weaponWithEmoji = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
     await interaction.update({
-      content: `1st weapon selected: **${weaponWithEmoji}**\nNow choose your 2nd weapon (${player.role2}):`,
-      components,
+      content: `✔ **1st weapon:** ${weapon1Label}\n\nNow choose your **2nd weapon** (${player.role2}):`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_second_weapon',
+              placeholder: `Select 2nd Weapon (${player.role2})`,
+              options: weaponOptions,
+            },
+          ],
+        },
+      ],
     });
-
-    this.botService.updateSetup(guildId, channelId, setup);
   }
+
+  // ─── Step 3: Player picks 2nd weapon → show operator dropdown ───────────────
 
   @StringSelect('select_second_weapon')
   public async onSelectSecondWeapon(
@@ -190,43 +200,269 @@ export class RoleInteractionHandler {
     }
 
     player.weapons.push(weapon);
+    this.botService.updateSetup(guildId, channelId, setup);
+
+    // Build operator list excluding operators already taken by other players
+    const takenByOthers = setup.players
+      .filter((p) => p.userId !== interaction.user.id && p.operatorSkill)
+      .map((p) => p.operatorSkill);
+
+    const operatorOptions = OPERATOR_SKILLS
+      .filter((op) => !takenByOthers.includes(op))
+      .map((op) => ({
+        label: this.truncateLabel(this.botService.formatWithEmoji(guildId, 'operator', op)),
+        value: op,
+      }));
+
+    const w1 = this.botService.formatWithEmoji(guildId, 'weapon', player.weapons[0]);
+    const w2 = this.botService.formatWithEmoji(guildId, 'weapon', weapon);
 
     await interaction.update({
-      content: `Weapons selected: **${player.weapons[0]}** and **${weapon}**`,
+      content:
+        `✔ **Weapons:** ${w1} / ${w2}\n\n` +
+        `Now select your **Operator Skill**:`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_operator_private',
+              placeholder: 'Select Operator Skill',
+              min_values: 1,
+              max_values: 1,
+              options:
+                operatorOptions.length > 0
+                  ? operatorOptions
+                  : [{ label: 'No operators available', value: 'none' }],
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  // ─── Step 4: Player picks operator → show lethal dropdown ───────────────────
+
+  @StringSelect('select_operator_private')
+  public async onSelectOperatorPrivate(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
+    const guildId = interaction.guildId!;
+    const channelId = interaction.channelId;
+    const operatorName = selected[0];
+
+    if (operatorName === 'none') {
+      return interaction.reply({
+        content: 'No operators are available — all have been taken by other players!',
+        ephemeral: true,
+      });
+    }
+
+    const setup = this.botService.getSetup(guildId, channelId);
+    if (!setup) {
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
+    }
+
+    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    if (!player) {
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
+    }
+
+    if (!this.botService.canSelectOperator(setup, interaction.user.id, operatorName)) {
+      return interaction.reply({
+        content: `**${operatorName}** was just taken by another player. Please try again.`,
+        ephemeral: true,
+      });
+    }
+
+    player.operatorSkill = operatorName;
+    this.botService.updateSetup(guildId, channelId, setup);
+
+    const lethalOptions = LETHAL_EQUIPMENT.map((lethal) => ({
+      label: this.truncateLabel(this.botService.formatWithEmoji(guildId, 'lethal', lethal)),
+      value: lethal,
+    }));
+
+    const opLabel = this.botService.formatWithEmoji(guildId, 'operator', operatorName);
+
+    await interaction.update({
+      content:
+        `✔ **Operator:** ${opLabel}\n\n` +
+        `Now select your **Lethal Equipment**:`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_lethal_private',
+              placeholder: 'Select Lethal Equipment',
+              min_values: 1,
+              max_values: 1,
+              options: lethalOptions,
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  // ─── Step 5: Player picks lethal → show tactical dropdown ───────────────────
+
+  @StringSelect('select_lethal_private')
+  public async onSelectLethalPrivate(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
+    const guildId = interaction.guildId!;
+    const channelId = interaction.channelId;
+    const lethalName = selected[0];
+
+    const setup = this.botService.getSetup(guildId, channelId);
+    if (!setup) {
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
+    }
+
+    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    if (!player) {
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
+    }
+
+    player.lethal = lethalName;
+    this.botService.updateSetup(guildId, channelId, setup);
+
+    const tacticalOptions = TACTICAL_EQUIPMENT
+      .map((tactical) => {
+        const count = this.botService.getTacticalCount(setup, tactical);
+        return {
+          label: this.truncateLabel(this.botService.formatWithEmoji(guildId, 'tactical', tactical)),
+          value: tactical,
+          description: `${count}/3 used`,
+          _count: count,
+        };
+      })
+      .filter((t) => t._count < 3)
+      .map(({ label, value, description }) => ({ label, value, description }));
+
+    const lethalLabel = this.botService.formatWithEmoji(guildId, 'lethal', lethalName);
+
+    await interaction.update({
+      content:
+        `✔ **Lethal:** ${lethalLabel}\n\n` +
+        `Now select your **Tactical Equipment**:`,
+      components: [
+        {
+          type: 1,
+          components: [
+            {
+              type: 3,
+              custom_id: 'select_tactical_private',
+              placeholder: 'Select Tactical Equipment',
+              min_values: 1,
+              max_values: 1,
+              options:
+                tacticalOptions.length > 0
+                  ? tacticalOptions
+                  : [{ label: 'All tactical at max (3/3)', value: 'none' }],
+            },
+          ],
+        },
+      ],
+    });
+  }
+
+  // ─── Step 6: Player picks tactical → player is done ─────────────────────────
+
+  @StringSelect('select_tactical_private')
+  public async onSelectTacticalPrivate(
+    @Context() [interaction]: StringSelectContext,
+    @SelectedStrings() selected: string[],
+  ) {
+    const guildId = interaction.guildId!;
+    const channelId = interaction.channelId;
+    const tacticalName = selected[0];
+
+    if (tacticalName === 'none') {
+      return interaction.reply({
+        content: 'No tactical equipment available — all types are at max capacity (3/3)!',
+        ephemeral: true,
+      });
+    }
+
+    const setup = this.botService.getSetup(guildId, channelId);
+    if (!setup) {
+      return interaction.reply({ content: 'No active setup found!', ephemeral: true });
+    }
+
+    const player = setup.players.find((p) => p.userId === interaction.user.id);
+    if (!player) {
+      return interaction.reply({ content: 'You are not in this setup!', ephemeral: true });
+    }
+
+    const currentCount = this.botService.getTacticalCount(setup, tacticalName);
+    if (currentCount >= 3 && player.tactical !== tacticalName) {
+      return interaction.reply({
+        content: `**${tacticalName}** just reached max capacity (3/3). Please try again.`,
+        ephemeral: true,
+      });
+    }
+
+    player.tactical = tacticalName;
+    this.botService.updateSetup(guildId, channelId, setup);
+
+    // Show summary to the player in the ephemeral message
+    const weaponsText = player.weapons?.join(' / ') ?? 'None';
+    const tacLabel = this.botService.formatWithEmoji(guildId, 'tactical', tacticalName);
+
+    await interaction.update({
+      content:
+        `✅ **Your setup is complete!**\n\n` +
+        `**Roles:** ${player.role1} / ${player.role2}\n` +
+        `**Weapons:** ${weaponsText}\n` +
+        `**Operator:** ${player.operatorSkill}\n` +
+        `**Lethal:** ${player.lethal}\n` +
+        `**Tactical:** ${tacLabel}`,
       components: [],
     });
 
-    this.botService.updateSetup(guildId, channelId, setup);
-
+    // Update the shared channel message (progress or final roster)
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
     if (message) {
-      await this.checkAndMoveToOperators(message, setup);
+      await this.checkAndFinalize(message, setup, guildId);
     }
   }
 
-  private async updateRoleEmbed(interaction: any, setup: any) {
+  // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+  /** Rebuilds the progress embed on the shared channel message */
+  private async updateMainEmbed(interaction: any, setup: any) {
     const message = await interaction.channel?.messages.fetch(setup.messageId!);
     if (!message) return;
 
     const statusEmoji = { waiting: '⏳', in_progress: '🔄', active: '✅', completed: '✔️' };
-    const queueTime = setup.lastQueueTime
-      ? setup.lastQueueTime.toLocaleString()
-      : new Date().toLocaleString();
+    const queueTime = setup.lastQueueTime?.toLocaleString() ?? new Date().toLocaleString();
 
     const embed = {
       color: EMBED_COLOR,
-      title: `**Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}**`,
+      title: `**Roster Setup ${statusEmoji[setup.status || 'waiting']} ${(setup.status ?? 'waiting').toUpperCase()}**`,
       description:
         setup.players
           .map((p) => {
-            if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
-              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]}, ${p.weapons[1]} 2/2**\n─────────────`;
-            } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
-              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - ${p.weapons[0]} 1/2**\n─────────────`;
-            } else if (p.role1 && p.role2) {
-              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> - 0/2**\n─────────────`;
+            if (p.tactical) {
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> ✅ Complete**\n─────────────`;
             }
-            return `**Selecting...**\n**0/2**\n─────────────`;
+            if (p.role1 && p.role2 && p.weapons?.length >= 2) {
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — selecting equipment…**\n─────────────`;
+            }
+            if (p.role1 && p.role2 && p.weapons?.length === 1) {
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — ${p.weapons[0]} (1/2)**\n─────────────`;
+            }
+            if (p.role1 && p.role2) {
+              return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — selecting weapons…**\n─────────────`;
+            }
+            return `**Selecting…**\n**<@${p.userId}>**\n─────────────`;
           })
           .join('\n') +
         '\n\n' +
@@ -264,27 +500,41 @@ export class RoleInteractionHandler {
     await message.edit({ embeds: [embed], components });
   }
 
-  private async checkAndMoveToOperators(message: any, setup: any) {
-    if (!this.botService.allPlayersReady(setup, 'weapons')) {
-      const statusEmoji = { waiting: '⏳', in_progress: '🔄', active: '✅', completed: '✔️' };
-      const queueTime = setup.lastQueueTime
-        ? setup.lastQueueTime.toLocaleString()
-        : new Date().toLocaleString();
+  /**
+   * After a player completes their tactical pick, update the shared message.
+   * If all players are fully done → show the final completed roster.
+   * Otherwise → update the progress embed so others can see who's done.
+   */
+  private async checkAndFinalize(message: any, setup: any, guildId: string) {
+    const requiredPlayers = this.botService.isTestMode() ? 1 : 5;
+    const isComplete = (p: any) =>
+      p.weapons?.length >= 2 && p.operatorSkill && p.lethal && p.tactical;
 
-      const embed = {
+    const allDone =
+      setup.players.length === requiredPlayers && setup.players.every(isComplete);
+
+    if (!allDone) {
+      // Show live progress on the shared message
+      const queueTime = setup.lastQueueTime?.toLocaleString() ?? new Date().toLocaleString();
+      const progressEmbed = {
         color: EMBED_COLOR,
-        title: `**Roster Setup ${statusEmoji[setup.status || 'waiting']} ${setup.status?.toUpperCase() || 'WAITING'}**`,
+        title: '**Roster Setup 🔄 IN PROGRESS**',
         description:
           setup.players
             .map((p) => {
-              if (p.role1 && p.role2 && p.weapons && p.weapons.length >= 2) {
-                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> ${p.weapons[0]}, ${p.weapons[1]} 2/2**`;
-              } else if (p.role1 && p.role2 && p.weapons && p.weapons.length === 1) {
-                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> ${p.weapons[0]} 1/2**`;
-              } else if (p.role1 && p.role2) {
-                return `**${p.role1}/${p.role2}**\n**0/2**`;
+              if (isComplete(p)) {
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> ✅ Complete**\n─────────────`;
               }
-              return `**Selecting...**\n**0/2**`;
+              if (p.role1 && p.role2 && p.weapons?.length >= 2) {
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — selecting equipment…**\n─────────────`;
+              }
+              if (p.role1 && p.role2 && p.weapons?.length === 1) {
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — ${p.weapons[0]} (1/2)**\n─────────────`;
+              }
+              if (p.role1 && p.role2) {
+                return `**${p.role1}/${p.role2}**\n**<@${p.userId}> — selecting weapons…**\n─────────────`;
+              }
+              return `**Selecting…**\n**<@${p.userId}>**\n─────────────`;
             })
             .join('\n') +
           '\n\n' +
@@ -294,7 +544,7 @@ export class RoleInteractionHandler {
         image: { url: BANNER_URL },
       };
 
-      const roleComponents = [
+      const progressComponents = [
         {
           type: 1,
           components: [
@@ -319,76 +569,67 @@ export class RoleInteractionHandler {
         },
       ];
 
-      await message.edit({ embeds: [embed], components: roleComponents });
+      await message.edit({ embeds: [progressEmbed], components: progressComponents });
       return;
     }
 
-    setup.currentPage = 'operators';
-    const guildId = setup.guildId;
+    // ── All 5 players done — show completed roster ────────────────────────────
+    setup.status = 'completed';
+    this.botService.updateSetup(guildId, setup.channelId, setup);
 
-    const embed = {
+    const queueTime = setup.lastQueueTime?.toLocaleString() ?? new Date().toLocaleString();
+
+    const playersList = setup.players
+      .map((p, i) => {
+        const weapons = p.weapons?.join(' / ') ?? 'None';
+        return (
+          `**Player ${i + 1}: <@${p.userId}>**\n` +
+          `**Roles: ${p.role1} / ${p.role2}**\n` +
+          `**Weapons: ${weapons}**\n` +
+          `**Operator: ${p.operatorSkill}**\n` +
+          `**Equipment: ${p.lethal} | ${p.tactical}**`
+        );
+      })
+      .join('\n\n─────────────────────────────\n\n');
+
+    const finalEmbed = {
       color: EMBED_COLOR,
-      title: '**Operator Skills Selection**',
+      title: '**✅ Roster Setup COMPLETED**',
       description:
-        '**Each player must select a unique operator skill:**\n\n' +
-        setup.players
-          .map((p) => {
-            if (p.operatorSkill) {
-              return `**<@${p.userId}>: ${this.botService.formatWithEmoji(guildId, 'operator', p.operatorSkill)}**`;
-            }
-            return `**<@${p.userId}> - Selecting...**`;
-          })
-          .join('\n') +
-        '\n\n**Available Operators:**\n' +
-        OPERATOR_SKILLS.map((op) => {
-          const taken = setup.players.find((p) => p.operatorSkill === op);
-          const opWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
-          return taken ? `**${opWithEmoji} (<@${taken.userId}>)**` : `**${opWithEmoji}**`;
-        }).join('\n'),
-      footer: { text: 'Select from the dropdown below - Each must be unique!' },
+        '**Your team configuration is complete!**\n\n' +
+        playersList +
+        '\n\n**Setup Complete — Ready for Tournament!**' +
+        `\n\n**Last Queue Date: ${queueTime}**`,
+      footer: { text: 'COD Mobile Esports' },
       image: { url: BANNER_URL },
     };
 
-    const takenOperators = setup.players.filter((p) => p.operatorSkill).map((p) => p.operatorSkill);
-    const operatorOptions = OPERATOR_SKILLS.map((op) => {
-      const labelWithEmoji = this.botService.formatWithEmoji(guildId, 'operator', op);
-      const takenPlayer = setup.players.find((p) => p.operatorSkill === op);
-      const description = takenOperators.includes(op)
-        ? `Taken by <@${takenPlayer?.userId}>`
-        : undefined;
-      return {
-        label: this.truncateLabel(labelWithEmoji),
-        value: op,
-        description: description ? this.truncateLabel(description, 100) : undefined,
-      };
-    }).filter((op) => !takenOperators.includes(op.value));
+    await message.edit({
+      embeds: [finalEmbed],
+      components: [
+        {
+          type: 1,
+          components: [
+            { type: 2, style: 2, label: 'Start New Setup', custom_id: 'new_setup' },
+          ],
+        },
+      ],
+    });
 
-    const components = [
-      {
-        type: 1,
-        components: [
-          {
-            type: 3,
-            custom_id: 'select_operator',
-            placeholder: 'Select Operator Skill',
-            min_values: 1,
-            max_values: 1,
-            options:
-              operatorOptions.length > 0
-                ? operatorOptions
-                : [{ label: 'No operators available', value: 'none', description: 'All operators taken' }],
-          },
-        ],
-      },
-      {
-        type: 1,
-        components: [
-          { type: 2, style: 2, label: 'Edit', custom_id: 'edit_operators' },
-          { type: 2, style: 4, label: 'Leave', custom_id: 'leave_setup' },
-        ],
-      },
-    ];
+    // Send roster log
+    const logText = setup.players
+      .map((p, i) => {
+        const weapons = p.weapons?.join(', ') ?? 'None';
+        return (
+          `Player ${i + 1}: <@${p.userId}>\n` +
+          `Roles: ${p.role1} / ${p.role2}\n` +
+          `Weapons: ${weapons}\n` +
+          `Operator: ${p.operatorSkill}\n` +
+          `Equipment: ${p.lethal} | ${p.tactical}`
+        );
+      })
+      .join('\n\n');
 
-    await message.edit({ embeds: [embed], components });
+    this.botService.sendLog(guildId, `[ROSTER COMPLETE]\n\n${logText}`);
   }
 }
