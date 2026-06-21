@@ -346,7 +346,7 @@ export class RoleInteractionHandler {
       // Respond to interaction first (within 3-second window)
       await interaction.update({
         content:
-          `✅ **${GAME_MODE_LABELS[mode]}** loadout saved!\n\n` +
+          `**${GAME_MODE_LABELS[mode]}** loadout saved!\n\n` +
           this.modeHeader(nextMode) +
           `\n\nSelect your **1st weapon** (${player.role1}):`,
         components: [
@@ -488,17 +488,17 @@ export class RoleInteractionHandler {
 
   private buildPlayerSummary(p: any): string {
     return (
-      `✅ **All loadouts complete!**\n\n` +
+      `**All loadouts complete!**\n\n` +
       `**Role:** ${p.role1} / ${p.role2}\n\n` +
-      `🎯 **Hardpoint**\n` +
+      `**Hardpoint**\n` +
       `Weapons: ${p.loadouts.hardpoint.weapons.join(' / ')}\n` +
       `Operator: ${p.loadouts.hardpoint.operatorSkill}\n` +
       `Equipment: ${p.loadouts.hardpoint.lethal} | ${p.loadouts.hardpoint.tactical}\n\n` +
-      `💣 **Search & Destroy**\n` +
+      `**Search & Destroy**\n` +
       `Weapons: ${p.loadouts.searchAndDestroy.weapons.join(' / ')}\n` +
       `Operator: ${p.loadouts.searchAndDestroy.operatorSkill}\n` +
       `Equipment: ${p.loadouts.searchAndDestroy.lethal} | ${p.loadouts.searchAndDestroy.tactical}\n\n` +
-      `⚔️ **Control**\n` +
+      `**Control**\n` +
       `Weapons: ${p.loadouts.control.weapons.join(' / ')}\n` +
       `Operator: ${p.loadouts.control.operatorSkill}\n` +
       `Equipment: ${p.loadouts.control.lethal} | ${p.loadouts.control.tactical}`
