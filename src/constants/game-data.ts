@@ -83,7 +83,7 @@ export function parseRoleCombination(combination: string): {
 export const WEAPONS: Record<WeaponClassRole, string[]> = {
   [WeaponClassRole.AR]: [
     'Type 19', 'XM4', 'Oden', 'DR-H', 'HVK-30', 'Krig 6', 'BP50', 'LK24',
-    'Grau 5.56', 'RAM-7', 'Type 25', 'Kilo 141', 'Groza',
+    'Grau 5.56', 'RAM-7', 'Type 25', 'Kilo 141', 'Groza', 'BAL-27'
   ],
   [WeaponClassRole.SMG]: [
     'VMP', 'USS 9', 'Fennec', 'Switchblade X9', 'CBR4', 'PDW-57',
