@@ -1,17 +1,21 @@
 export const EMBED_COLOR = 0x8943F9;
 
 export enum WeaponClassRole {
-  AR = 'AR',
-  SMG = 'SMG',
-  LMG = 'LMG',
-  SHOTGUN = 'SHOTGUN',
+  AR       = 'AR',
+  SMG      = 'SMG',
+  LMG      = 'LMG',
+  SHOTGUN  = 'SHOTGUN',
   MARKSMAN = 'MARKSMAN',
-  SNIPER = 'SNIPER',
+  SNIPER   = 'SNIPER',
 }
 
 export type GameMode = 'hardpoint' | 'searchAndDestroy' | 'control';
 
-export const GAME_MODE_SEQUENCE: GameMode[] = ['hardpoint', 'searchAndDestroy', 'control'];
+export const GAME_MODE_SEQUENCE: GameMode[] = [
+  'hardpoint',
+  'searchAndDestroy',
+  'control',
+];
 
 export const GAME_MODE_LABELS: Record<GameMode, string> = {
   hardpoint:        'HARDPOINT',
@@ -37,42 +41,24 @@ export const ROLE_DESCRIPTIONS = {
   [WeaponClassRole.SNIPER]:   'Sniper Rifles',
 };
 
-// 25 combinations – exactly Discord's select-menu option limit.
-// Previously missing (now added): Shotgun/Sniper, Shotgun/LMG,
-//   Marksman/Sniper, Marksman/LMG, LMG/Sniper
-export const ROLE_COMBINATIONS = [
+// Exactly 25 combinations — Discord's hard select-menu option limit.
+// Previously missing 5 have been added:
+//   Shotgun/Sniper, Shotgun/LMG, Marksman/Sniper, Marksman/LMG, LMG/Sniper
+// LMG/Marksman was intentionally excluded to stay at the 25-option cap.
+export const ROLE_COMBINATIONS: string[] = [
   // AR-first (5)
-  'AR/SMG',
-  'AR/Sniper',
-  'AR/Shotgun',
-  'AR/Marksman',
-  'AR/LMG',
+  'AR/SMG', 'AR/Sniper', 'AR/Shotgun', 'AR/Marksman', 'AR/LMG',
   // SMG-first (5)
-  'SMG/AR',
-  'SMG/Sniper',
-  'SMG/Shotgun',
-  'SMG/Marksman',
-  'SMG/LMG',
+  'SMG/AR', 'SMG/Sniper', 'SMG/Shotgun', 'SMG/Marksman', 'SMG/LMG',
   // Sniper-first (4)
-  'Sniper/AR',
-  'Sniper/SMG',
-  'Sniper/Marksman',
-  'Sniper/LMG',
+  'Sniper/AR', 'Sniper/SMG', 'Sniper/Marksman', 'Sniper/LMG',
   // Shotgun-first (4)
-  'Shotgun/AR',
-  'Shotgun/SMG',
-  'Shotgun/Sniper',    // ← added
-  'Shotgun/LMG',       // ← added
+  'Shotgun/AR', 'Shotgun/SMG', 'Shotgun/Sniper', 'Shotgun/LMG',
   // Marksman-first (4)
-  'Marksman/AR',
-  'Marksman/SMG',
-  'Marksman/Sniper',   // ← added
-  'Marksman/LMG',      // ← added
-  // LMG-first (4)
-  'LMG/AR',
-  'LMG/SMG',
-  'LMG/Sniper',        // ← added
-  'LMG/Marksman',        // ← added
+  'Marksman/AR', 'Marksman/SMG', 'Marksman/Sniper', 'Marksman/LMG',
+  // LMG-first (3)
+  'LMG/AR', 'LMG/SMG', 'LMG/Sniper',
+  // Total = 25
 ];
 
 export function parseRoleCombination(combination: string): {
@@ -81,20 +67,20 @@ export function parseRoleCombination(combination: string): {
 } {
   const [first, second] = combination.split('/');
   const roleMap: Record<string, WeaponClassRole> = {
-    AR:        WeaponClassRole.AR,
-    SMG:       WeaponClassRole.SMG,
-    LMG:       WeaponClassRole.LMG,
-    Shotgun:   WeaponClassRole.SHOTGUN,
-    SHOTGUN:   WeaponClassRole.SHOTGUN,
-    Marksman:  WeaponClassRole.MARKSMAN,
-    MARKSMAN:  WeaponClassRole.MARKSMAN,
-    Sniper:    WeaponClassRole.SNIPER,
-    SNIPER:    WeaponClassRole.SNIPER,
+    AR:       WeaponClassRole.AR,
+    SMG:      WeaponClassRole.SMG,
+    LMG:      WeaponClassRole.LMG,
+    Shotgun:  WeaponClassRole.SHOTGUN,
+    SHOTGUN:  WeaponClassRole.SHOTGUN,
+    Marksman: WeaponClassRole.MARKSMAN,
+    MARKSMAN: WeaponClassRole.MARKSMAN,
+    Sniper:   WeaponClassRole.SNIPER,
+    SNIPER:   WeaponClassRole.SNIPER,
   };
   return { role1: roleMap[first], role2: roleMap[second] };
 }
 
-export const WEAPONS = {
+export const WEAPONS: Record<WeaponClassRole, string[]> = {
   [WeaponClassRole.AR]: [
     'Type 19', 'XM4', 'Oden', 'DR-H', 'HVK-30', 'Krig 6', 'BP50', 'LK24',
     'Grau 5.56', 'RAM-7', 'Type 25', 'Kilo 141', 'Groza',
@@ -110,15 +96,8 @@ export const WEAPONS = {
 };
 
 export const OPERATOR_SKILLS = [
-  'War Machine',
-  'Equalizer',
-  'Purifier',
-  'Death Machine',
-  'Gravity Vortex',
-  'Sparrow',
-  'Claw',
-  'Annihilator',
-  'Tempest',
+  'War Machine', 'Equalizer', 'Purifier', 'Death Machine',
+  'Gravity Vortex', 'Sparrow', 'Claw', 'Annihilator', 'Tempest',
 ];
 
 export const LETHAL_EQUIPMENT   = ['Frag Grenade', 'Sticky Grenade'];
@@ -135,13 +114,14 @@ export function getRoleCombinationWeapons(combination: string): string[] {
   return [...WEAPONS[role1], ...WEAPONS[role2]];
 }
 
-export function getRolePoolDisplay(
-  rolePool: Record<WeaponClassRole, number>,
-): string {
-  const max = ROLE_POOL;
-  return (
-    `**${max[WeaponClassRole.SMG] - rolePool[WeaponClassRole.SMG]}/${max[WeaponClassRole.SMG]} SMG**\n` +
-    `**${max[WeaponClassRole.AR]  - rolePool[WeaponClassRole.AR] }/${max[WeaponClassRole.AR] } AR**\n` +
-    `**0/1 Sniper**\n**0/1 Shotgun**\n**0/1 Marksman**\n**0/1 LMG**`
-  );
+export function getRolePoolDisplay(rolePool: Record<WeaponClassRole, number>): string {
+  const m = ROLE_POOL;
+  return [
+    `**${m[WeaponClassRole.SMG]      - rolePool[WeaponClassRole.SMG]     }/${m[WeaponClassRole.SMG]}      SMG**`,
+    `**${m[WeaponClassRole.AR]       - rolePool[WeaponClassRole.AR]      }/${m[WeaponClassRole.AR]}       AR**`,
+    `**${m[WeaponClassRole.SNIPER]   - rolePool[WeaponClassRole.SNIPER]  }/${m[WeaponClassRole.SNIPER]}   Sniper**`,
+    `**${m[WeaponClassRole.SHOTGUN]  - rolePool[WeaponClassRole.SHOTGUN] }/${m[WeaponClassRole.SHOTGUN]}  Shotgun**`,
+    `**${m[WeaponClassRole.MARKSMAN] - rolePool[WeaponClassRole.MARKSMAN]}/${m[WeaponClassRole.MARKSMAN]} Marksman**`,
+    `**${m[WeaponClassRole.LMG]      - rolePool[WeaponClassRole.LMG]     }/${m[WeaponClassRole.LMG]}      LMG**`,
+  ].join('\n');
 }
