@@ -18,9 +18,9 @@ export const GAME_MODE_SEQUENCE: GameMode[] = [
 ];
 
 export const GAME_MODE_LABELS: Record<GameMode, string> = {
-  hardpoint:        'HARDPOINT',
-  searchAndDestroy: 'SEARCH & DESTROY',
-  control:          'CONTROL',
+  hardpoint:        '**HARDPOINT**',
+  searchAndDestroy: '**SEARCH & DESTROY**',
+  control:          '**CONTROL**',
 };
 
 export const ROLE_POOL = {
