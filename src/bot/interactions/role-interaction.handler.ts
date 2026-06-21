@@ -427,16 +427,16 @@ export class RoleInteractionHandler {
       .map((p, i) =>
         `**Player ${i + 1}: <@${p.userId}>**\n` +
         `**Role: ${p.role1} / ${p.role2}**\n` +
-        `🎯 **Hardpoint:** ${loadoutLine(p.loadouts.hardpoint)}\n` +
-        `💣 **Search & Destroy:** ${loadoutLine(p.loadouts.searchAndDestroy)}\n` +
-        `⚔️ **Control:** ${loadoutLine(p.loadouts.control)}`,
+        `**Hardpoint:** ${loadoutLine(p.loadouts.hardpoint)}\n` +
+        `**Search & Destroy:** ${loadoutLine(p.loadouts.searchAndDestroy)}\n` +
+        `**Control:** ${loadoutLine(p.loadouts.control)}`,
       )
       .join('\n\n──────────────────────\n\n');
 
     await message.edit({
       embeds: [{
         color:       EMBED_COLOR,
-        title:       '**✅ Roster Setup COMPLETED**',
+        title:       '**Roster Setup :**',
         description: `**Team loadouts are locked in!**\n\n${playerList}\n\n**Last Queue Date: ${queueTime}**`,
         footer:      { text: 'COD Mobile Esports' },
         image:       { url: BANNER_URL },
